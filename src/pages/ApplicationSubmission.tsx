@@ -47,7 +47,7 @@ interface CoApplicant {
 
 const steps = ['Select Property', 'Applicant Information', 'Upload Documents', 'Application Fee & Payment'];
 
-const stripePromise = loadStripe('pk_test_51RTG5wH22vWQhflEZN66BVH4vcSUlwRAWOWkZjzjspBUVou0A7EnzhI1xnVrQ9eh4HMHbK1wsbn1SrtIa8WeIwOk00NEw7Idqq');
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '');
 
 export default function ApplicationSubmission() {
   const [activeStep, setActiveStep] = useState(0);
