@@ -26,6 +26,7 @@
     "emailjs-com": "^3.2.0",
     "file-saver": "^2.0.5",
     "nodemailer": "^7.0.3",
+    "pdf-lib": "^1.17.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.1",
