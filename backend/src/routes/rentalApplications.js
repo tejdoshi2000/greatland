@@ -728,7 +728,7 @@ router.get('/:id/fee', async (req, res) => {
           coApplicants: coApplicantEmails.map(email => {
             const coApp = coApps.find(app => app.applicantEmail === email);
             return {
-              email,
+            email,
               status: coApp?.paymentStatus === 'completed' ? 'paid' : 'unpaid'
             };
           })
