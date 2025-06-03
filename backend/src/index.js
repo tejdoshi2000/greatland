@@ -11,7 +11,10 @@ console.log('--- Greatland Backend Server ---');
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'https://greatland-frontend.onrender.com'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
