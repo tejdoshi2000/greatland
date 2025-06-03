@@ -225,7 +225,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
         console.log('Attempting to load PDF template...');
         // Encode the filename properly
         const filename = encodeURIComponent('RPI 553, Application to Rent (1).pdf');
-        const response = await fetch(`http://localhost:5000/static/${filename}`);
+        const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/static/${filename}`);
         
         if (!response.ok) {
           console.error('Failed to load PDF:', {
@@ -329,7 +329,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
 
       console.log('Sending application to backend...');
       // Save the application to the backend
-      const response = await fetch('http://localhost:5000/api/rental-applications', {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

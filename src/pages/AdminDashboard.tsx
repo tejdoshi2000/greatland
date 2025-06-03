@@ -65,7 +65,7 @@ const AdminDashboard: React.FC = () => {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/properties', {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
@@ -140,8 +140,8 @@ const AdminDashboard: React.FC = () => {
       });
 
       const url = selectedProperty
-        ? `http://localhost:5000/api/properties/${selectedProperty._id}`
-        : 'http://localhost:5000/api/properties';
+        ? (process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/properties/${selectedProperty._id}`
+        : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties';
 
       const response = await fetch(url, {
         method: selectedProperty ? 'PUT' : 'POST',
@@ -168,7 +168,7 @@ const AdminDashboard: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/properties/${id}`, {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/properties/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,

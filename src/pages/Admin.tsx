@@ -21,6 +21,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
 
+
+console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+
 interface Property {
   _id: string;
   title: string;

@@ -72,7 +72,7 @@ const PropertyDetails: React.FC = () => {
 
   const fetchPropertyDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/properties/${id}`);
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/properties/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch property details');
       }
@@ -157,7 +157,7 @@ const PropertyDetails: React.FC = () => {
           <Box sx={{ position: 'relative', width: '100%', aspectRatio: '16/9', bgcolor: '#f5f5f5', mb: 2 }}>
             <CardMedia
               component="img"
-              image={`http://localhost:5000${property.images[currentImageIndex]}`}
+              image={(process.env.REACT_APP_API_URL || 'http://localhost:5000') + property.images[currentImageIndex]}
               alt={property.title}
               sx={{
                 width: '100%',
@@ -219,7 +219,7 @@ const PropertyDetails: React.FC = () => {
                 >
                   <CardMedia
                     component="img"
-                    image={`http://localhost:5000${img}`}
+                    image={(process.env.REACT_APP_API_URL || 'http://localhost:5000') + img}
                     alt={`Gallery ${idx + 1}`}
                     sx={{ width: '100%', height: 90, objectFit: 'cover', background: '#f5f5f5' }}
                   />

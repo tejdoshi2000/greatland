@@ -103,7 +103,7 @@ export default function ApplicationSubmission() {
           const docs = data.documents?.map((doc: any) => ({
             type: doc.type,
             file: new File([], doc.url.split('/').pop() || ''),
-            preview: `http://localhost:5000${doc.url}`
+            preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (doc.url || '')
           })) || [];
           setDocuments(docs);
           return true;
@@ -339,7 +339,7 @@ export default function ApplicationSubmission() {
           {
             type,
             file,
-            preview: `http://localhost:5000${uploadData.documents.find((d: any) => d.type === type)?.url || ''}`
+            preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadData.documents.find((d: any) => d.type === type)?.url || '')
           }
         ];
       });

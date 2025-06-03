@@ -71,7 +71,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         onPaymentError(stripeError.message || 'Payment failed');
       } else if (paymentIntent.status === 'succeeded') {
         // Confirm payment on backend
-        const confirmResponse = await fetch('http://localhost:5000/api/payments/confirm-payment', {
+        const confirmResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/payments/confirm-payment', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
