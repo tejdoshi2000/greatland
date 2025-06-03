@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyToken = async (token: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify', {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/auth/verify', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

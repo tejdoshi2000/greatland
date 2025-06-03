@@ -141,7 +141,7 @@ const RentalApplications: React.FC = () => {
 
       console.log('Fetching applications with token:', token.substring(0, 20) + '...');
       
-      const response = await fetch('http://localhost:5000/api/rental-applications/admin', {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/admin', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -241,7 +241,7 @@ const RentalApplications: React.FC = () => {
         token: token.substring(0, 20) + '...' // Log partial token for debugging
       });
 
-      const url = `http://localhost:5000/api/rental-applications/${applicationId}/status`;
+      const url = (process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/status`;
       console.log('Making request to:', url);
 
       const response = await fetch(url, {
@@ -320,7 +320,7 @@ const RentalApplications: React.FC = () => {
     // Ensure the URL is absolute and properly formatted
     const absoluteUrl = documentUrl.startsWith('http') 
       ? documentUrl 
-      : `http://localhost:5000${documentUrl}`;
+      : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + documentUrl;
     console.log('Viewing document:', absoluteUrl);
     setSelectedDocument(absoluteUrl);
   };
@@ -337,7 +337,7 @@ const RentalApplications: React.FC = () => {
 
       // First check if the server is accessible
       console.log('Checking server accessibility...');
-      const testResponse = await fetch('http://localhost:5000/api/rental-applications/test');
+      const testResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/test');
       console.log('Server test response:', {
         status: testResponse.status,
         ok: testResponse.ok,
@@ -350,7 +350,7 @@ const RentalApplications: React.FC = () => {
 
       // Then check what applications are available
       console.log('Checking available applications...');
-      const listResponse = await fetch('http://localhost:5000/api/rental-applications/debug/list', {
+      const listResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/debug/list', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -432,7 +432,7 @@ const RentalApplications: React.FC = () => {
 
       // First verify the application exists
       console.log('Verifying application exists:', applicationToDelete);
-      const verifyResponse = await fetch(`http://localhost:5000/api/rental-applications/verify/${applicationToDelete}`, {
+      const verifyResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/verify/${applicationToDelete}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -454,7 +454,7 @@ const RentalApplications: React.FC = () => {
       }
 
       console.log('Application verified, proceeding with delete');
-      const url = `http://localhost:5000/api/rental-applications/${applicationToDelete}`;
+      const url = (process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationToDelete}`;
       console.log('Making DELETE request to:', url);
 
       const response = await fetch(url, {
@@ -591,7 +591,7 @@ const RentalApplications: React.FC = () => {
       }
 
       // First verify the application exists
-      const verifyResponse = await fetch(`http://localhost:5000/api/rental-applications/verify/${applicationId}`, {
+      const verifyResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/verify/${applicationId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -602,7 +602,7 @@ const RentalApplications: React.FC = () => {
       }
 
       // Then proceed with deletion
-      const response = await fetch(`http://localhost:5000/api/rental-applications/${applicationId}`, {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

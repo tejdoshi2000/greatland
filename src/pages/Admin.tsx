@@ -84,7 +84,7 @@ const Admin: React.FC = () => {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/properties');
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties');
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }
@@ -198,7 +198,7 @@ const Admin: React.FC = () => {
         throw new Error('Admin token not found. Please log in as admin.');
       }
 
-      const response = await fetch('http://localhost:5000/api/properties', {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${adminToken}`,
@@ -249,7 +249,7 @@ const Admin: React.FC = () => {
         throw new Error('Admin token not found. Please log in as admin.');
       }
 
-      const response = await fetch(`http://localhost:5000/api/properties/${propertyId}`, {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/properties/${propertyId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${adminToken}`,

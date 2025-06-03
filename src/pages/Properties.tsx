@@ -27,7 +27,7 @@ const Properties: React.FC = () => {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/properties/available');
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties/available');
       if (!response.ok) {
         throw new Error('Failed to fetch properties');
       }

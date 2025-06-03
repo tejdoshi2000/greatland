@@ -72,7 +72,7 @@ export default function ApplicationSubmission() {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/properties');
+        const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties');
         if (!response.ok) {
           throw new Error('Failed to fetch properties');
         }
@@ -89,7 +89,7 @@ export default function ApplicationSubmission() {
 
   const checkExistingApplication = async (email: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/rental-applications/email/${email}`);
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/email/${email}`);
       if (response.ok) {
         const data = await response.json();
         if (data) {
@@ -165,7 +165,7 @@ export default function ApplicationSubmission() {
           user: '000000000000000000000000'
         };
         try {
-          const response = await fetch('http://localhost:5000/api/rental-applications', {
+          const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ export default function ApplicationSubmission() {
       // Update application status to pending_payment
       if (applicationId) {
         try {
-          const response = await fetch(`http://localhost:5000/api/rental-applications/${applicationId}/status`, {
+          const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/status`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json'
@@ -229,7 +229,7 @@ export default function ApplicationSubmission() {
         setPaymentLoading(true);
         setPaymentError(null);
         try {
-          const feeRes = await fetch(`http://localhost:5000/api/rental-applications/${applicationId}/fee`);
+          const feeRes = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/fee`);
           if (!feeRes.ok) {
             throw new Error('Failed to fetch payment info');
           }
@@ -319,7 +319,7 @@ export default function ApplicationSubmission() {
       formData.append('type', type);
       formData.append('applicationId', applicationId);
 
-      const uploadResponse = await fetch('http://localhost:5000/api/rental-applications/upload-document', {
+      const uploadResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/upload-document', {
         method: 'POST',
         body: formData
       });
@@ -372,7 +372,7 @@ export default function ApplicationSubmission() {
       typeof paymentInfo.totalDue === 'number' &&
       paymentInfo.totalDue > 0
     ) {
-      fetch('http://localhost:5000/api/payments/create-payment-intent', {
+      fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/payments/create-payment-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId, amount: paymentInfo.totalDue * 100 })
