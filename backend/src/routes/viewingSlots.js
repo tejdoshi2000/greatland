@@ -15,7 +15,7 @@ function splitIntoSlots(startTime, endTime) {
     const slotStart = currentTime.toTimeString().slice(0, 5);
     currentTime.setMinutes(currentTime.getMinutes() + 10);
     const slotEnd = currentTime.toTimeString().slice(0, 5);
-    slots.push({ startTime: slotStart, endTime: slotEnd });
+      slots.push({ startTime: slotStart, endTime: slotEnd });
   }
   return slots;
 }

@@ -713,12 +713,8 @@ router.get('/:id/fee', async (req, res) => {
         householdId: application.householdId
       });
 
-      // Count how many co-applicants have already paid
-      const paidCoApplicants = coApps.filter(app => app.paymentStatus === 'completed').length;
-      
-      // Calculate how many adults still need to pay
-      const unpaidAdults = totalAdults - paidCoApplicants - (application.paymentStatus === 'completed' ? 1 : 0);
-      const totalDue = Math.max(0, unpaidAdults * APPLICATION_FEE);
+      // Calculate total due based on all adults
+      const totalDue = totalAdults * APPLICATION_FEE;
 
       res.json({
         role: 'principal',
@@ -728,14 +724,14 @@ router.get('/:id/fee', async (req, res) => {
           coApplicants: coApplicantEmails.map(email => {
             const coApp = coApps.find(app => app.applicantEmail === email);
             return {
-            email,
+              email,
               status: coApp?.paymentStatus === 'completed' ? 'paid' : 'unpaid'
             };
           })
         },
-        message: totalDue === 0
+        message: application.paymentStatus === 'completed'
           ? 'All application fees for this household have been paid.'
-          : `You need to pay for ${unpaidAdults} adult${unpaidAdults !== 1 ? 's' : ''} ($${totalDue}).`
+          : `You need to pay for all ${totalAdults} adult${totalAdults !== 1 ? 's' : ''} ($${totalDue}).`
       });
     } else {
       // Co-applicant
@@ -745,29 +741,20 @@ router.get('/:id/fee', async (req, res) => {
         isPrincipalApplicant: true
       });
 
-      // If principal has paid for this applicant
-      if (principal && principal.paymentStatus === 'completed' && principal.coApplicantEmails.includes(application.applicantEmail)) {
+      // If principal has paid
+      if (principal && principal.paymentStatus === 'completed') {
         return res.json({
           role: 'coapplicant',
           totalDue: 0,
-          message: 'Your application fee has already been paid by your principal applicant.'
+          message: 'Your application fee has been paid by your principal applicant.'
         });
       }
 
-      // If this applicant has already paid
-      if (application.paymentStatus === 'completed') {
-        return res.json({
-          role: 'coapplicant',
-          totalDue: 0,
-          message: 'You have already paid your application fee.'
-        });
-      }
-
-      // Otherwise, needs to pay
+      // If principal hasn't paid yet
       return res.json({
         role: 'coapplicant',
-        totalDue: APPLICATION_FEE,
-        message: 'You need to pay your application fee ($48).'
+        totalDue: 0,
+        message: 'Your principal applicant needs to pay the application fee for all applicants.'
       });
     }
   } catch (error) {
