@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -10,6 +10,8 @@ import {
   CardMedia,
   Paper,
   useTheme,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
@@ -19,9 +21,48 @@ import BedIcon from '@mui/icons-material/Bed';
 import BathtubIcon from '@mui/icons-material/Bathtub';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
 
+interface Property {
+  _id: string;
+  title: string;
+  price: number;
+  location: string;
+  bedrooms: number;
+  bathrooms: number;
+  squareFeet: number;
+  description: string;
+  images: string[];
+  features: string[];
+  amenities: string[];
+  status: 'available' | 'rented';
+}
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const [featuredProperty, setFeaturedProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchFeaturedProperty();
+  }, []);
+
+  const fetchFeaturedProperty = async () => {
+    try {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties/available');
+      if (!response.ok) {
+        throw new Error('Failed to fetch properties');
+      }
+      const properties = await response.json();
+      // Get the first available property as featured
+      const availableProperty = properties.find((p: Property) => p.status === 'available');
+      setFeaturedProperty(availableProperty || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch featured property');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const features = [
     {
@@ -40,16 +81,6 @@ const Home: React.FC = () => {
       description: 'Apply for your desired property online with our streamlined application process.',
     },
   ];
-
-  const featuredProperty = {
-    id: 'property-1',
-    title: 'Frigate Bird Villa',
-    price: 3500,
-    bedrooms: 4,
-    bathrooms: 3.5,
-    squareFeet: 3500,
-    image: '/FrigateBird/IMG_8063.jpeg'
-  };
 
   return (
     <Box>
@@ -138,54 +169,70 @@ const Home: React.FC = () => {
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
                 }}
               >
-                <CardMedia
-                  component="img"
-                  height="300"
-                  image={featuredProperty.image}
-                  alt={featuredProperty.title}
-                />
-                <CardContent>
-                  <Typography variant="h5" gutterBottom sx={{ color: theme.palette.primary.main }}>
-                    Featured Property
-                  </Typography>
-                  <Typography variant="h6" gutterBottom>
-                    {featuredProperty.title}
-                  </Typography>
-                  <Typography variant="h6" color="primary" gutterBottom>
-                    ${featuredProperty.price}/month
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <BedIcon color="action" />
-                      <Typography>{featuredProperty.bedrooms} bd</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <BathtubIcon color="action" />
-                      <Typography>{featuredProperty.bathrooms} ba</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SquareFootIcon color="action" />
-                      <Typography>{featuredProperty.squareFeet} sqft</Typography>
-                    </Box>
+                {loading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
                   </Box>
+                ) : error ? (
+                  <Alert severity="error" sx={{ m: 2 }}>
+                    {error}
+                  </Alert>
+                ) : featuredProperty ? (
+                  <>
+                    <CardMedia
+                      component="img"
+                      height="300"
+                      image={(process.env.REACT_APP_API_URL || 'http://localhost:5000') + featuredProperty.images[0]}
+                      alt={featuredProperty.title}
+                    />
+                    <CardContent>
+                      <Typography variant="h5" gutterBottom sx={{ color: theme.palette.primary.main }}>
+                        Featured Property
+                      </Typography>
+                      <Typography variant="h6" gutterBottom>
+                        {featuredProperty.title}
+                      </Typography>
+                      <Typography variant="h6" color="primary" gutterBottom>
+                        ${featuredProperty.price}/month
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <BedIcon color="action" />
+                          <Typography>{featuredProperty.bedrooms} bd</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <BathtubIcon color="action" />
+                          <Typography>{featuredProperty.bathrooms} ba</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <SquareFootIcon color="action" />
+                          <Typography>{featuredProperty.squareFeet} sqft</Typography>
+                        </Box>
+                      </Box>
 
-                  <Button 
-                    variant="outlined" 
-                    fullWidth
-                    onClick={() => navigate(`/property/${featuredProperty.id}`)}
-                    sx={{
-                      borderColor: theme.palette.primary.main,
-                      color: theme.palette.primary.main,
-                      '&:hover': {
-                        borderColor: theme.palette.primary.dark,
-                        backgroundColor: 'rgba(43, 65, 98, 0.05)'
-                      }
-                    }}
-                  >
-                    View Details
-                  </Button>
-                </CardContent>
+                      <Button 
+                        variant="outlined" 
+                        fullWidth
+                        onClick={() => navigate(`/property/${featuredProperty._id}`)}
+                        sx={{
+                          borderColor: theme.palette.primary.main,
+                          color: theme.palette.primary.main,
+                          '&:hover': {
+                            borderColor: theme.palette.primary.dark,
+                            backgroundColor: 'rgba(43, 65, 98, 0.05)'
+                          }
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </>
+                ) : (
+                  <Alert severity="info" sx={{ m: 2 }}>
+                    No featured property available at the moment.
+                  </Alert>
+                )}
               </Card>
             </Grid>
           </Grid>

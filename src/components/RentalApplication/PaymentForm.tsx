@@ -139,25 +139,25 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
           <>
             <Typography variant="h6" color="primary" gutterBottom>
               Total Due: ${paymentInfo.totalDue}
-            </Typography>
-            <Box sx={{ mt: 2, mb: 2 }}>
+        </Typography>
+        <Box sx={{ mt: 2, mb: 2 }}>
               <PaymentElement />
-            </Box>
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={!stripe || processing}
-              fullWidth
+        </Box>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          disabled={!stripe || processing}
+          fullWidth
               sx={{ py: 1.5, fontSize: '1.1rem', mt: 2 }}
-            >
+        >
               {processing ? 'Processing...' : `Pay $${paymentInfo.totalDue}`}
-            </Button>
+        </Button>
           </>
         )}
         {paymentInfo.totalDue === 0 && !paymentSuccess && (
