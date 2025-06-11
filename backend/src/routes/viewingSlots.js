@@ -1,3 +1,4 @@
+console.log("viewingSlots.js loaded");
 const express = require('express');
 const router = express.Router();
 const ViewingSlot = require('../models/ViewingSlot');
@@ -5,45 +6,25 @@ const Property = require('../models/Property');
 const { sendSlotBookedEmail } = require('../services/emailService');
 require('dotenv').config();
 
-// Utility: Split time range into 10-min slots
+// Helper function to split a time range into 10-minute intervals
 function splitIntoSlots(startTime, endTime) {
-  console.log('Splitting time range:', { startTime, endTime });
   const slots = [];
-  
-  // Parse start and end times
-  const [startHour, startMin] = startTime.split(':').map(Number);
-  const [endHour, endMin] = endTime.split(':').map(Number);
-  
-  // Convert to total minutes for easier calculation
-  let currentMinutes = startHour * 60 + startMin;
-  const endMinutes = endHour * 60 + endMin;
-  
-  // Create 10-minute slots
-  while (currentMinutes < endMinutes) {
-    const slotStartHour = Math.floor(currentMinutes / 60);
-    const slotStartMin = currentMinutes % 60;
-    const slotStart = `${slotStartHour.toString().padStart(2, '0')}:${slotStartMin.toString().padStart(2, '0')}`;
-    
-    currentMinutes += 10; // Add 10 minutes
-    
-    const slotEndHour = Math.floor(currentMinutes / 60);
-    const slotEndMin = currentMinutes % 60;
-    const slotEnd = `${slotEndHour.toString().padStart(2, '0')}:${slotEndMin.toString().padStart(2, '0')}`;
-    
-    if (currentMinutes <= endMinutes) {
-      slots.push({ startTime: slotStart, endTime: slotEnd });
-    }
+  let currentTime = new Date(`1970-01-01T${startTime}`);
+  const endDateTime = new Date(`1970-01-01T${endTime}`);
+  while (currentTime < endDateTime) {
+    const slotStart = currentTime.toTimeString().slice(0, 5);
+    currentTime.setMinutes(currentTime.getMinutes() + 10);
+    const slotEnd = currentTime.toTimeString().slice(0, 5);
+    slots.push({ startTime: slotStart, endTime: slotEnd });
   }
-  
-  console.log('Generated slots:', slots);
   return slots;
 }
 
 // Admin: Create slots (splits into 10-min intervals)
-router.post('/admin/properties/:id/slots', async (req, res) => {
+router.post('/admin/properties/:propertyId/slots', async (req, res) => {
   try {
     const { date, startTime, endTime } = req.body;
-    const propertyId = req.params.id;
+    const propertyId = req.params.propertyId;
     if (!date || !startTime || !endTime) {
       return res.status(400).json({ error: 'Missing date, startTime, or endTime' });
     }
@@ -99,33 +80,34 @@ router.post('/admin/properties/:id/slots', async (req, res) => {
     res.json(created);
   } catch (err) {
     console.error('Error creating slots:', err);
-    res.status(500).json({ error: 'Failed to create slots', details: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
 // Admin: Get all slots for a property
-router.get('/admin/properties/:id/slots/all', async (req, res) => {
-  const slots = await ViewingSlot.find({ propertyId: req.params.id });
+router.get('/admin/properties/:propertyId/slots/all', async (req, res) => {
+  const slots = await ViewingSlot.find({ propertyId: req.params.propertyId });
   res.json(slots);
 });
 
 // Admin: Delete a slot
-router.delete('/admin/properties/:id/slots/:slotId', async (req, res) => {
+router.delete('/admin/properties/:propertyId/slots/:slotId', async (req, res) => {
   await ViewingSlot.findByIdAndDelete(req.params.slotId);
   res.json({ success: true });
 });
 
 // User: Get available slots for a property
-router.get('/properties/:id/slots', async (req, res) => {
-  const slots = await ViewingSlot.find({ propertyId: req.params.id, isBooked: false });
+router.get('/properties/:propertyId/slots', async (req, res) => {
+  const slots = await ViewingSlot.find({ propertyId: req.params.propertyId, isBooked: false });
   res.json(slots);
 });
 
 // User: Book a slot
-router.post('/properties/:id/slots/:slotId/book', async (req, res) => {
+console.log("Booking route is about to be registered");
+router.post('/properties/:propertyId/slots/:slotId/book', async (req, res) => {
   try {
     console.log('Booking request received:', req.body);
-    console.log('Property ID from URL:', req.params.id);
+    console.log('Property ID from URL:', req.params.propertyId);
     console.log('Slot ID from URL:', req.params.slotId);
     console.log('Environment variables:', {
       emailUser: process.env.EMAIL_USER,
@@ -135,16 +117,16 @@ router.post('/properties/:id/slots/:slotId/book', async (req, res) => {
     const { name, familySize, cell, hasApplication } = req.body;
     
     // First, get the property details
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findById(req.params.propertyId);
     console.log('Property lookup result:', {
-      id: req.params.id,
+      id: req.params.propertyId,
       found: !!property,
       location: property?.location,
       fullProperty: property
     });
 
     if (!property) {
-      console.error('Property not found for ID:', req.params.id);
+      console.error('Property not found for ID:', req.params.propertyId);
       return res.status(404).json({ error: 'Property not found' });
     }
 
@@ -187,10 +169,10 @@ router.post('/properties/:id/slots/:slotId/book', async (req, res) => {
       // Don't return error to user, just log it
     }
 
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error in slot booking:', error);
-    res.status(500).json({ error: 'Failed to book slot', details: error.message });
+    res.json({ success: true, slot });
+  } catch (err) {
+    console.error('Error booking slot:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -207,6 +189,34 @@ router.get('/test/property/:id', async (req, res) => {
   } catch (error) {
     console.error('Test property lookup error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Test email endpoint
+router.post('/test/email', async (req, res) => {
+  try {
+    const testDetails = {
+      propertyAddress: 'Test Property',
+      date: new Date().toISOString().split('T')[0],
+      startTime: '10:00',
+      endTime: '10:30',
+      name: 'Test User',
+      familySize: '2',
+      cell: '1234567890',
+      hasApplication: 'no'
+    };
+
+    console.log('Testing email with details:', testDetails);
+    const emailSent = await sendSlotBookedEmail(testDetails);
+    
+    if (emailSent) {
+      res.json({ success: true, message: 'Test email sent successfully' });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to send test email' });
+    }
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

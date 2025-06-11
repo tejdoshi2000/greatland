@@ -20,9 +20,18 @@ const AdminViewingSlots: React.FC<Props> = ({ propertyId }) => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   useEffect(() => {
-    fetch(`/api/admin/properties/${propertyId}/slots/all`)
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/properties/${propertyId}/slots/all`)
       .then(res => res.json())
-      .then(data => setSlots(data));
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSlots(data);
+        } else if (data && Array.isArray(data.slots)) {
+          setSlots(data.slots);
+        } else {
+          setSlots([]);
+        }
+      })
+      .catch(() => setSlots([]));
   }, [propertyId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,7 +40,7 @@ const AdminViewingSlots: React.FC<Props> = ({ propertyId }) => {
 
   const handleAddSlot = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch(`/api/admin/properties/${propertyId}/slots`, {
+    const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/properties/${propertyId}/slots`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -42,12 +51,13 @@ const AdminViewingSlots: React.FC<Props> = ({ propertyId }) => {
       setForm({ date: '', startTime: '', endTime: '' });
       setSnackbar({ open: true, message: 'Slot added!', severity: 'success' });
     } else {
-      setSnackbar({ open: true, message: 'Failed to add slot.', severity: 'error' });
+      const error = await res.json();
+      setSnackbar({ open: true, message: error.error || 'Failed to add slot.', severity: 'error' });
     }
   };
 
   const handleDelete = async (slotId: string) => {
-    const res = await fetch(`/api/admin/properties/${propertyId}/slots/${slotId}`, { method: 'DELETE' });
+    const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/properties/${propertyId}/slots/${slotId}`, { method: 'DELETE' });
     if (res.ok) {
       setSlots(slots.filter(s => s._id !== slotId));
       setSnackbar({ open: true, message: 'Slot deleted!', severity: 'success' });

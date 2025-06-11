@@ -1,19 +1,42 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+// Log environment variables (without exposing the password)
+console.log('Email Configuration Check:', {
+  hasEmailUser: !!process.env.EMAIL_USER,
+  emailUser: process.env.EMAIL_USER,
+  hasEmailPassword: !!process.env.EMAIL_PASSWORD,
+  hasAdminEmail: !!process.env.ADMIN_EMAIL
+});
+
 // Create a transporter using Gmail SMTP
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || 'tejdoshi5@gmail.com',
-    pass: process.env.EMAIL_PASSWORD,
-  },
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
+
+// Test the connection immediately
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('SMTP Connection Error:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      responseCode: error.responseCode,
+      response: error.response
+    });
+  } else {
+    console.log('SMTP Connection Successful');
+  }
 });
 
 // Email configuration
 const emailConfig = {
-  from: process.env.EMAIL_USER || 'tejdoshi5@gmail.com',
-  adminEmail: 'tejdoshi5@gmail.com',
+  from: process.env.EMAIL_USER,
+  adminEmail: process.env.ADMIN_EMAIL || process.env.EMAIL_USER
 };
 
 // Email templates
@@ -32,9 +55,9 @@ const emailTemplates = {
         <p><strong>Family Size:</strong> ${bookingDetails.familySize}</p>
         <p><strong>Contact:</strong> ${bookingDetails.cell}</p>
         <p><strong>Application Status:</strong> ${bookingDetails.hasApplication === 'yes' ? 'Already generated' : 'Not yet generated'}</p>
-      `,
+      `
     };
-  },
+  }
 };
 
 module.exports = {

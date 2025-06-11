@@ -24,9 +24,18 @@ const PropertyViewingSlots: React.FC<Props> = ({ propertyId, propertyAddress }) 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   useEffect(() => {
-    fetch(`/api/properties/${propertyId}/slots`)
-      .then(res => res.json())
-      .then(data => setSlots(data));
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/properties/${propertyId}/slots`)
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch slots');
+        }
+        return res.json();
+      })
+      .then(data => setSlots(data))
+      .catch(error => {
+        console.error('Error fetching slots:', error);
+        setSnackbar({ open: true, message: 'Failed to load viewing slots', severity: 'error' });
+      });
   }, [propertyId]);
 
   const handleBook = (slot: Slot) => {
@@ -41,7 +50,7 @@ const PropertyViewingSlots: React.FC<Props> = ({ propertyId, propertyAddress }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot) return;
-    const res = await fetch(`/api/properties/${propertyId}/slots/${selectedSlot._id}/book`, {
+    const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/properties/${propertyId}/slots/${selectedSlot._id}/book`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -51,7 +60,8 @@ const PropertyViewingSlots: React.FC<Props> = ({ propertyId, propertyAddress }) 
       setSlots(slots.filter(s => s._id !== selectedSlot._id));
       setOpen(false);
     } else {
-      setSnackbar({ open: true, message: 'Failed to book slot.', severity: 'error' });
+      const error = await res.json();
+      setSnackbar({ open: true, message: error.error || 'Failed to book slot.', severity: 'error' });
     }
   };
 

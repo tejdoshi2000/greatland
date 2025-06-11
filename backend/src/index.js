@@ -71,6 +71,7 @@ const uploadRoutes = require('./routes/upload');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
+console.log('Mounting viewingSlots routes');
 app.use('/api', require('./routes/viewingSlots'));
 app.use('/api/rental-applications', rentalApplicationRoutes);
 app.use('/api/payments', paymentRoutes);
