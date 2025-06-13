@@ -40,6 +40,16 @@ const propertySchema = new mongoose.Schema({
   amenities: [{
     type: String
   }],
+  // New fields for Facts & Features
+  numBeds: { type: Number },
+  numBaths: { type: Number },
+  sqftArea: { type: Number },
+  incomeQualification: { type: String },
+  creditScoreEligible: { type: String },
+  petPolicy: { type: String },
+  securityDeposit: { type: String },
+  utilitiesPaidBy: { type: String },
+  hoaPaidBy: { type: String },
   status: {
     type: String,
     enum: ['available', 'rented'],
