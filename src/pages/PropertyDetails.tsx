@@ -44,6 +44,15 @@ interface PropertyDetail {
   squareFeet: number;
   amenities: string[];
   status: 'available' | 'rented';
+  numBeds?: number;
+  numBaths?: number;
+  sqftArea?: number;
+  incomeQualification?: string;
+  creditScoreEligible?: string;
+  petPolicy?: string;
+  securityDeposit?: string;
+  utilitiesPaidBy?: string;
+  hoaPaidBy?: string;
 }
 
 const GalleryGrid = styled('div')(({ theme }) => ({
@@ -241,40 +250,65 @@ const PropertyDetails: React.FC = () => {
           </Typography>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Property Details
+              Property Details & Features
             </Typography>
-            <List>
-              <ListItem>
-                <ListItemText primary="Bedrooms" secondary={property.bedrooms} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Bathrooms" secondary={property.bathrooms} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Square Feet" secondary={property.squareFeet} />
-              </ListItem>
-              <ListItem>
-                <ListItemText primary="Location" secondary={property.location} />
-              </ListItem>
-            </List>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Amenities
-            </Typography>
-            <List>
-              {property.amenities.map((amenity, index) => (
-                <ListItem key={index}>
-                  <ListItemText primary={amenity} />
-                </ListItem>
-              ))}
-            </List>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Bedrooms</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span role="img" aria-label="bed">🛏</span>
+                  <Typography>{property.numBeds ?? property.bedrooms}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Bathrooms</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span role="img" aria-label="bath">🛁</span>
+                  <Typography>{property.numBaths ?? property.bathrooms}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Sqft Area</Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span role="img" aria-label="area">📐</span>
+                  <Typography>{property.sqftArea ?? property.squareFeet}</Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Amenities</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {property.amenities && property.amenities.length > 0 ? property.amenities.map((a, i) => (
+                    <Paper key={i} sx={{ px: 1.5, py: 0.5, borderRadius: 2, bgcolor: 'grey.100', fontSize: 14 }}>{a}</Paper>
+                  )) : <Typography color="text.secondary">No amenities listed</Typography>}
+                </Box>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Landlord's Criteria</Typography>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  <li>Income Qualification: {property.incomeQualification || 'N/A'}</li>
+                  <li>Credit Score Eligible: {property.creditScoreEligible || 'N/A'}</li>
+                  <li>Pet Policy: {property.petPolicy || 'N/A'}</li>
+                </ul>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Financials</Typography>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  <li>Security Deposit: {property.securityDeposit || 'N/A'}</li>
+                  <li>Utilities Paid By: {property.utilitiesPaidBy || 'N/A'}</li>
+                  <li>HOA Paid By: {property.hoaPaidBy || 'N/A'}</li>
+                </ul>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Location</Typography>
+                <Typography>{property.location}</Typography>
+              </Grid>
+            </Grid>
           </Paper>
         </Grid>
 

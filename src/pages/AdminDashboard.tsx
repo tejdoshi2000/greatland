@@ -57,6 +57,15 @@ const AdminDashboard: React.FC = () => {
     features: '',
     amenities: '',
     images: [] as File[],
+    numBeds: '',
+    numBaths: '',
+    sqftArea: '',
+    incomeQualification: '',
+    creditScoreEligible: '',
+    petPolicy: '',
+    securityDeposit: '',
+    utilitiesPaidBy: '',
+    hoaPaidBy: '',
   });
 
   useEffect(() => {
@@ -96,6 +105,15 @@ const AdminDashboard: React.FC = () => {
         features: '',
         amenities: '',
         images: [],
+        numBeds: '',
+        numBaths: '',
+        sqftArea: '',
+        incomeQualification: '',
+        creditScoreEligible: '',
+        petPolicy: '',
+        securityDeposit: '',
+        utilitiesPaidBy: '',
+        hoaPaidBy: '',
       });
     } else {
       setSelectedProperty(null);
@@ -110,6 +128,15 @@ const AdminDashboard: React.FC = () => {
         features: '',
         amenities: '',
         images: [],
+        numBeds: '',
+        numBaths: '',
+        sqftArea: '',
+        incomeQualification: '',
+        creditScoreEligible: '',
+        petPolicy: '',
+        securityDeposit: '',
+        utilitiesPaidBy: '',
+        hoaPaidBy: '',
       });
     }
     setOpenDialog(true);
@@ -354,6 +381,57 @@ const AdminDashboard: React.FC = () => {
                   value={formData.squareFeet}
                   onChange={(e) => setFormData({ ...formData, squareFeet: e.target.value })}
                   required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>Facts & Features</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Income Qualification"
+                  fullWidth
+                  value={formData.incomeQualification}
+                  onChange={e => setFormData({ ...formData, incomeQualification: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Credit Score Eligible"
+                  fullWidth
+                  value={formData.creditScoreEligible}
+                  onChange={e => setFormData({ ...formData, creditScoreEligible: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Pet Policy"
+                  fullWidth
+                  value={formData.petPolicy}
+                  onChange={e => setFormData({ ...formData, petPolicy: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Security Deposit"
+                  fullWidth
+                  value={formData.securityDeposit}
+                  onChange={e => setFormData({ ...formData, securityDeposit: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Utilities Paid By"
+                  fullWidth
+                  value={formData.utilitiesPaidBy}
+                  onChange={e => setFormData({ ...formData, utilitiesPaidBy: e.target.value })}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="HOA Paid By"
+                  fullWidth
+                  value={formData.hoaPaidBy}
+                  onChange={e => setFormData({ ...formData, hoaPaidBy: e.target.value })}
                 />
               </Grid>
               <Grid item xs={12}>

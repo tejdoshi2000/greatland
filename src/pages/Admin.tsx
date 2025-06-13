@@ -37,6 +37,15 @@ interface Property {
   features: string[];
   amenities: string[];
   status: 'available' | 'rented';
+  numBeds?: number;
+  numBaths?: number;
+  sqftArea?: number;
+  incomeQualification?: string;
+  creditScoreEligible?: string;
+  petPolicy?: string;
+  securityDeposit?: string;
+  utilitiesPaidBy?: string;
+  hoaPaidBy?: string;
 }
 
 interface NewProperty {
@@ -51,6 +60,15 @@ interface NewProperty {
   features: string[];
   amenities: string[];
   status: 'available' | 'rented';
+  numBeds?: number;
+  numBaths?: number;
+  sqftArea?: number;
+  incomeQualification?: string;
+  creditScoreEligible?: string;
+  petPolicy?: string;
+  securityDeposit?: string;
+  utilitiesPaidBy?: string;
+  hoaPaidBy?: string;
 }
 
 const MAX_IMAGES = 50;
@@ -68,7 +86,16 @@ const Admin: React.FC = () => {
     images: [],
     features: [],
     amenities: [],
-    status: 'available'
+    status: 'available',
+    numBeds: 0,
+    numBaths: 0,
+    sqftArea: 0,
+    incomeQualification: '',
+    creditScoreEligible: '',
+    petPolicy: '',
+    securityDeposit: '',
+    utilitiesPaidBy: '',
+    hoaPaidBy: ''
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>('');
@@ -183,6 +210,17 @@ const Admin: React.FC = () => {
         formData.append('images', file);
       });
 
+      // Add new facts and features
+      formData.append('numBeds', String(newProperty.numBeds || 0));
+      formData.append('numBaths', String(newProperty.numBaths || 0));
+      formData.append('sqftArea', String(newProperty.sqftArea || 0));
+      formData.append('incomeQualification', newProperty.incomeQualification || '');
+      formData.append('creditScoreEligible', newProperty.creditScoreEligible || '');
+      formData.append('petPolicy', newProperty.petPolicy || '');
+      formData.append('securityDeposit', newProperty.securityDeposit || '');
+      formData.append('utilitiesPaidBy', newProperty.utilitiesPaidBy || '');
+      formData.append('hoaPaidBy', newProperty.hoaPaidBy || '');
+
       // Debug log
       console.log('Form Data being sent:', {
         title: newProperty.title.trim(),
@@ -230,7 +268,16 @@ const Admin: React.FC = () => {
         images: [],
         features: [],
         amenities: [],
-        status: 'available'
+        status: 'available',
+        numBeds: 0,
+        numBaths: 0,
+        sqftArea: 0,
+        incomeQualification: '',
+        creditScoreEligible: '',
+        petPolicy: '',
+        securityDeposit: '',
+        utilitiesPaidBy: '',
+        hoaPaidBy: ''
       });
       setSelectedFiles([]);
       setUploadProgress(100);
@@ -379,7 +426,84 @@ const Admin: React.FC = () => {
               helperText={newProperty.squareFeet <= 0 ? 'Square footage must be greater than 0' : ''}
             />
           </Grid>
-          
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>Facts & Features</Typography>
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="No. of Beds"
+              type="number"
+              fullWidth
+              value={newProperty.numBeds}
+              onChange={e => setNewProperty({ ...newProperty, numBeds: Number(e.target.value) })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="No. of Baths"
+              type="number"
+              fullWidth
+              value={newProperty.numBaths}
+              onChange={e => setNewProperty({ ...newProperty, numBaths: Number(e.target.value) })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Sqft Area"
+              type="number"
+              fullWidth
+              value={newProperty.sqftArea}
+              onChange={e => setNewProperty({ ...newProperty, sqftArea: Number(e.target.value) })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Income Qualification"
+              fullWidth
+              value={newProperty.incomeQualification}
+              onChange={e => setNewProperty({ ...newProperty, incomeQualification: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Credit Score Eligible"
+              fullWidth
+              value={newProperty.creditScoreEligible}
+              onChange={e => setNewProperty({ ...newProperty, creditScoreEligible: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Pet Policy"
+              fullWidth
+              value={newProperty.petPolicy}
+              onChange={e => setNewProperty({ ...newProperty, petPolicy: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Security Deposit"
+              fullWidth
+              value={newProperty.securityDeposit}
+              onChange={e => setNewProperty({ ...newProperty, securityDeposit: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Utilities Paid By"
+              fullWidth
+              value={newProperty.utilitiesPaidBy}
+              onChange={e => setNewProperty({ ...newProperty, utilitiesPaidBy: e.target.value })}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="HOA Paid By"
+              fullWidth
+              value={newProperty.hoaPaidBy}
+              onChange={e => setNewProperty({ ...newProperty, hoaPaidBy: e.target.value })}
+            />
+          </Grid>
           <Grid item xs={12}>
             <input
               accept="image/*"
