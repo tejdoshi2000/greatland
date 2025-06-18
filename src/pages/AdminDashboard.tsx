@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Container,
@@ -45,6 +45,7 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState('');
   const [openSlotsDialog, setOpenSlotsDialog] = useState(false);
   const [slotsPropertyId, setSlotsPropertyId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
