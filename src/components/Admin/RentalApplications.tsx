@@ -32,6 +32,7 @@ import {
   KeyboardArrowUp as KeyboardArrowUpIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
+  Print as PrintIcon,
 } from '@mui/icons-material';
 
 type ApplicationStatus = 'generated' | 'pending_payment' | 'pending_submission' | 'submitted' | 'approved' | 'rejected';
@@ -127,10 +128,27 @@ const RentalApplications: React.FC = () => {
   const [showPdf, setShowPdf] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Helper function to determine document type
+  const getDocumentType = (url: string, type: string): string => {
+    if (type) return type;
+    
+    const extension = url.split('.').pop()?.toLowerCase();
+    if (extension === 'pdf') return 'pdf';
+    if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension || '')) return 'image';
+    return 'document';
+  };
+
+  // Helper function to check if document is an image
+  const isImageDocument = (url: string, type: string): boolean => {
+    const docType = getDocumentType(url, type);
+    return docType === 'image' || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(url.split('.').pop()?.toLowerCase() || '');
+  };
 
   const fetchApplications = useCallback(async () => {
     try {
@@ -326,23 +344,101 @@ const RentalApplications: React.FC = () => {
     setShowDocuments(true);
   };
 
-  const handleViewDocument = (documentUrl: string) => {
+  const handleViewDocument = (documentUrl: string, documentType: string) => {
     try {
       // Ensure the URL is absolute and properly formatted
       const absoluteUrl = documentUrl.startsWith('http') 
         ? documentUrl 
         : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + documentUrl;
+      
+      const detectedType = getDocumentType(documentUrl, documentType);
+      
       console.log('Viewing document:', {
         originalUrl: documentUrl,
         absoluteUrl: absoluteUrl,
+        documentType: documentType,
+        detectedType: detectedType,
         apiUrl: process.env.REACT_APP_API_URL
       });
       setSelectedDocument(absoluteUrl);
+      setSelectedDocumentType(detectedType);
     } catch (error) {
       console.error('Error constructing document URL:', error);
       setSnackbar({
         open: true,
         message: 'Error loading document',
+        severity: 'error'
+      });
+    }
+  };
+
+  const handlePrintDocument = () => {
+    if (!selectedDocument) return;
+
+    try {
+      const isImage = isImageDocument(selectedDocument, selectedDocumentType || '');
+      
+      if (!isImage) {
+        // For PDFs and other documents, open in new window for printing
+        const printWindow = window.open(selectedDocument, '_blank');
+        if (printWindow) {
+          printWindow.onload = () => {
+            printWindow.print();
+          };
+        }
+      } else {
+        // For images, create a print-friendly page
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <title>Print Document</title>
+                <style>
+                  body { 
+                    margin: 0; 
+                    padding: 20px; 
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                  }
+                  img { 
+                    max-width: 100%; 
+                    height: auto; 
+                    max-height: 90vh;
+                    object-fit: contain;
+                  }
+                  .document-info {
+                    margin-bottom: 20px;
+                    text-align: left;
+                    max-width: 800px;
+                    margin-left: auto;
+                    margin-right: auto;
+                  }
+                  @media print {
+                    body { padding: 0; }
+                    .document-info { margin-bottom: 10px; }
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="document-info">
+                  <h3>Document: ${selectedApplication?.applicantName || 'Unknown Applicant'}</h3>
+                  <p>Type: ${selectedDocumentType?.toUpperCase() || 'IMAGE'}</p>
+                  <p>Date: ${new Date().toLocaleDateString()}</p>
+                </div>
+                <img src="${selectedDocument}" alt="Document" onload="window.print()" />
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+        }
+      }
+    } catch (error) {
+      console.error('Error printing document:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error printing document',
         severity: 'error'
       });
     }
@@ -914,7 +1010,7 @@ const RentalApplications: React.FC = () => {
                       <Button
                         variant="contained"
                         size="small"
-                        onClick={() => handleViewDocument(doc.url)}
+                        onClick={() => handleViewDocument(doc.url, doc.type)}
                         sx={{ mt: 1 }}
                         fullWidth
                       >
@@ -941,24 +1037,61 @@ const RentalApplications: React.FC = () => {
 
       <Dialog
         open={!!selectedDocument}
-        onClose={() => setSelectedDocument(null)}
+        onClose={() => {
+          setSelectedDocument(null);
+          setSelectedDocumentType(null);
+        }}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Document Viewer</DialogTitle>
+        <DialogTitle>
+          Document Viewer - {selectedApplication?.applicantName}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              {selectedDocumentType?.toUpperCase()} Document
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<PrintIcon />}
+              onClick={handlePrintDocument}
+              size="small"
+            >
+              Print
+            </Button>
+          </Box>
+        </DialogTitle>
         <DialogContent>
           {selectedDocument && (
-            <Box sx={{ width: '100%', height: '80vh' }}>
-              <iframe
-                src={selectedDocument}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                title="Document Viewer"
-              />
+            <Box sx={{ width: '100%', height: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              {!isImageDocument(selectedDocument, selectedDocumentType || '') ? (
+                <iframe
+                  src={selectedDocument}
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  title="Document Viewer"
+                />
+              ) : (
+                <img
+                  src={selectedDocument}
+                  alt="Document"
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '100%', 
+                    objectFit: 'contain',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                  }}
+                />
+              )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setSelectedDocument(null)}>Close</Button>
+          <Button onClick={() => {
+            setSelectedDocument(null);
+            setSelectedDocumentType(null);
+          }}>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
 
