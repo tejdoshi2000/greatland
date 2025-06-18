@@ -53,7 +53,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, isRented = false 
       }}>
         <CardMedia
           component="img"
-          image={property.images[0]}
+          image={property.images && property.images.length > 0 ? property.images[0] : '/default-placeholder.png'}
           alt={property.title}
           sx={{
             width: '100%',

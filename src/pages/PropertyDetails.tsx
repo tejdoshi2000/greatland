@@ -166,7 +166,7 @@ const PropertyDetails: React.FC = () => {
           <Box sx={{ position: 'relative', width: '100%', aspectRatio: '16/9', bgcolor: '#f5f5f5', mb: 2 }}>
             <CardMedia
               component="img"
-              image={(process.env.REACT_APP_API_URL || 'http://localhost:5000') + property.images[currentImageIndex]}
+              image={property.images && property.images.length > 0 ? property.images[currentImageIndex] : '/default-placeholder.png'}
               alt={property.title}
               sx={{
                 width: '100%',
