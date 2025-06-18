@@ -4,33 +4,11 @@ const multer = require('multer');
 const path = require('path');
 const Property = require('../models/Property');
 const auth = require('../middleware/auth');
+const cloudinary = require('../utils/cloudinary');
 
-// Configure multer for image upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (extname && mimetype) {
-      return cb(null, true);
-    }
-    cb(new Error('Only image files are allowed!'));
-  }
-});
+// Use multer for memory storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // Get all properties
 router.get('/', async (req, res) => {
@@ -89,7 +67,21 @@ router.get('/:id', async (req, res) => {
 // Create new property (admin only)
 router.post('/', auth, upload.array('images', 50), async (req, res) => {
   try {
-    const imageUrls = req.files.map(file => `/uploads/${file.filename}`);
+    const imageFiles = req.files || [];
+    const imageUrls = [];
+    for (const file of imageFiles) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'greatland/properties' },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(file.buffer);
+      });
+      imageUrls.push(result.secure_url);
+    }
     const property = new Property({
       ...req.body,
       images: imageUrls
@@ -109,15 +101,27 @@ router.put('/:id', auth, upload.array('images', 50), async (req, res) => {
     if (!property) {
       return res.status(404).json({ message: 'Property not found' });
     }
-
     const updates = { ...req.body };
     if (req.files && req.files.length > 0) {
-      updates.images = req.files.map(file => `/uploads/${file.filename}`);
+      const imageFiles = req.files;
+      const imageUrls = [];
+      for (const file of imageFiles) {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'greatland/properties' },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(file.buffer);
+        });
+        imageUrls.push(result.secure_url);
+      }
+      updates.images = imageUrls;
     }
-
     Object.assign(property, updates);
     await property.save();
-    
     res.json(property);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
