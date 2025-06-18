@@ -346,10 +346,10 @@ const RentalApplications: React.FC = () => {
 
   const handleViewDocument = (documentUrl: string, documentType: string) => {
     try {
-      // Ensure the URL is absolute and properly formatted
-      const absoluteUrl = documentUrl.startsWith('http') 
-        ? documentUrl 
-        : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + documentUrl;
+    // Ensure the URL is absolute and properly formatted
+    const absoluteUrl = documentUrl.startsWith('http') 
+      ? documentUrl 
+      : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + documentUrl;
       
       const detectedType = getDocumentType(documentUrl, documentType);
       
@@ -360,7 +360,7 @@ const RentalApplications: React.FC = () => {
         detectedType: detectedType,
         apiUrl: process.env.REACT_APP_API_URL
       });
-      setSelectedDocument(absoluteUrl);
+    setSelectedDocument(absoluteUrl);
       setSelectedDocumentType(detectedType);
     } catch (error) {
       console.error('Error constructing document URL:', error);
@@ -1064,11 +1064,11 @@ const RentalApplications: React.FC = () => {
           {selectedDocument && (
             <Box sx={{ width: '100%', height: '80vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               {!isImageDocument(selectedDocument, selectedDocumentType || '') ? (
-                <iframe
-                  src={selectedDocument}
-                  style={{ width: '100%', height: '100%', border: 'none' }}
-                  title="Document Viewer"
-                />
+              <iframe
+                src={selectedDocument}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title="Document Viewer"
+              />
               ) : (
                 <img
                   src={selectedDocument}

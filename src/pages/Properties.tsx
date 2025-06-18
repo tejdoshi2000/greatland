@@ -68,7 +68,7 @@ const Properties: React.FC = () => {
                 bathrooms: property.bathrooms,
                 squareFeet: property.squareFeet,
                 description: property.description,
-                images: property.images.map(img => (process.env.REACT_APP_API_URL || 'http://localhost:5000') + img),
+                images: property.images,
                 propertyType: 'house',
                 status: property.status,
                 isRented: property.status === 'rented',

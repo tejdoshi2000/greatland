@@ -228,7 +228,7 @@ const PropertyDetails: React.FC = () => {
                 >
                   <CardMedia
                     component="img"
-                    image={(process.env.REACT_APP_API_URL || 'http://localhost:5000') + img}
+                    image={img}
                     alt={`Gallery ${idx + 1}`}
                     sx={{ width: '100%', height: 90, objectFit: 'cover', background: '#f5f5f5' }}
                   />

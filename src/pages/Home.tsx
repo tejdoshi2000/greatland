@@ -182,7 +182,7 @@ const Home: React.FC = () => {
                     <CardMedia
                       component="img"
                       height="300"
-                      image={(process.env.REACT_APP_API_URL || 'http://localhost:5000') + featuredProperty.images[0]}
+                      image={featuredProperty.images && featuredProperty.images.length > 0 ? featuredProperty.images[0] : '/default-placeholder.png'}
                       alt={featuredProperty.title}
                     />
                     <CardContent>

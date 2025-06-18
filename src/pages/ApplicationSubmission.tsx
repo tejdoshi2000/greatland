@@ -556,19 +556,19 @@ export default function ApplicationSubmission() {
       } else {
         // Replace existing document of the same type
         const uploadedDoc = uploadData.documents.find((d: any) => d.type === type);
-        setDocuments(prev => {
-          const filtered = prev.filter(doc => doc.type !== type);
-          return [
-            ...filtered,
-            {
-              type,
-              file,
+      setDocuments(prev => {
+        const filtered = prev.filter(doc => doc.type !== type);
+        return [
+          ...filtered,
+          {
+            type,
+            file,
               preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadedDoc?.url || ''),
               documentId: uploadedDoc?.documentId || uploadedDoc?._id,
               description: uploadedDoc?.description
-            }
-          ];
-        });
+          }
+        ];
+      });
       }
 
       setSuccess(true);

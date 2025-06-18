@@ -117,7 +117,7 @@ router.put('/:id', auth, upload.array('images', 50), async (req, res) => {
           stream.end(file.buffer);
         });
         imageUrls.push(result.secure_url);
-      }
+    }
       updates.images = imageUrls;
     }
     Object.assign(property, updates);
