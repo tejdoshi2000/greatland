@@ -67,16 +67,31 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [incomeType, setIncomeType] = useState('paystub');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('File select event triggered:', event);
     const file = event.target.files?.[0];
     if (file) {
+      console.log('File selected:', file.name, file.size);
       setSelectedFile(file);
+    } else {
+      console.log('No file selected');
+    }
+  };
+
+  const handleFileButtonClick = () => {
+    console.log('File button clicked, triggering file input');
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    } else {
+      console.error('File input ref not found');
     }
   };
 
   const handleUpload = () => {
     if (selectedFile) {
+      console.log('Uploading file:', selectedFile.name);
       // Create a synthetic event for the onUpload callback
       const syntheticEvent = {
         target: {
@@ -91,6 +106,8 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
       setDescription('');
       setSelectedFile(null);
       setIncomeType('paystub');
+    } else {
+      console.error('No file selected for upload');
     }
   };
 
@@ -172,18 +189,19 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
         <Grid item xs={12} sm={3}>
           <Button
             variant="outlined"
-            component="label"
+            onClick={handleFileButtonClick}
             fullWidth
             size="small"
           >
             Select File
-            <input
-              type="file"
-              hidden
-              accept=".pdf,image/*"
-              onChange={handleFileSelect}
-            />
           </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            style={{ display: 'none' }}
+            accept=".pdf,image/*"
+            onChange={handleFileSelect}
+          />
           {selectedFile && (
             <Typography variant="caption" display="block" sx={{ mt: 1 }}>
               Selected: {selectedFile.name}
@@ -227,6 +245,11 @@ export default function ApplicationSubmission() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // File input refs
+  const rentalFileRef = React.useRef<HTMLInputElement>(null);
+  const idFileRef = React.useRef<HTMLInputElement>(null);
+  const ssnFileRef = React.useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const fetchProperties = async () => {
       try {
@@ -243,6 +266,15 @@ export default function ApplicationSubmission() {
     };
 
     fetchProperties();
+  }, []);
+
+  // Debug environment variables
+  useEffect(() => {
+    console.log('Environment variables:', {
+      REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+      NODE_ENV: process.env.NODE_ENV,
+      currentLocation: window.location.href
+    });
   }, []);
 
   const checkExistingApplication = async (email: string) => {
@@ -440,12 +472,21 @@ export default function ApplicationSubmission() {
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: Document['type'], description?: string) => {
     try {
+      console.log('handleFileUpload called:', { type, description, event });
       setLoading(true);
       setError(null);
+      
       const file = event.target.files?.[0];
       if (!file) {
         throw new Error('Please select a file');
       }
+
+      console.log('File details:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
 
       if (!selectedProperty) {
         throw new Error('Please select a property first');
@@ -466,15 +507,7 @@ export default function ApplicationSubmission() {
         throw new Error('Selected property not found');
       }
 
-      // Convert file to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise((resolve, reject) => {
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-      });
-      reader.readAsDataURL(file);
-      const base64Data = await base64Promise;
-      const pdfBase64 = (base64Data as string).split(',')[1]; // Remove data URL prefix
+      console.log('Preparing to upload file to:', (process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/upload-document');
 
       // Upload document
       const formData = new FormData();
@@ -485,17 +518,28 @@ export default function ApplicationSubmission() {
         formData.append('description', description);
       }
 
+      console.log('FormData prepared:', {
+        hasFile: formData.has('file'),
+        type: formData.get('type'),
+        applicationId: formData.get('applicationId'),
+        description: formData.get('description')
+      });
+
       const uploadResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/upload-document', {
         method: 'POST',
         body: formData
       });
 
+      console.log('Upload response status:', uploadResponse.status);
+
       if (!uploadResponse.ok) {
         const errorData = await uploadResponse.json();
+        console.error('Upload failed:', errorData);
         throw new Error(errorData.message || 'Failed to upload document');
       }
 
       const uploadData = await uploadResponse.json();
+      console.log('Upload successful:', uploadData);
 
       // Update documents state: for income documents, add to the list; for others, replace
       if (type === 'income') {
@@ -506,31 +550,31 @@ export default function ApplicationSubmission() {
           file,
           preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadedDoc?.url || ''),
           documentId: uploadedDoc?.documentId || uploadedDoc?._id,
-          description: description || `Paystub ${new Date().toLocaleDateString()}`
+          description: description || `Income Document ${new Date().toLocaleDateString()}`
         };
         setDocuments(prev => [...prev, newDocument]);
       } else {
         // Replace existing document of the same type
         const uploadedDoc = uploadData.documents.find((d: any) => d.type === type);
-      setDocuments(prev => {
-        const filtered = prev.filter(doc => doc.type !== type);
-        return [
-          ...filtered,
-          {
-            type,
-            file,
+        setDocuments(prev => {
+          const filtered = prev.filter(doc => doc.type !== type);
+          return [
+            ...filtered,
+            {
+              type,
+              file,
               preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadedDoc?.url || ''),
               documentId: uploadedDoc?.documentId || uploadedDoc?._id,
               description: uploadedDoc?.description
-          }
-        ];
-      });
+            }
+          ];
+        });
       }
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error in handleFileUpload:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -686,18 +730,48 @@ export default function ApplicationSubmission() {
       case 2:
         return (
           <Box sx={{ mt: 2 }}>
+            {/* Debug section - remove after fixing */}
+            <Box sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: 1 }}>
+              <Typography variant="h6" gutterBottom>
+                Debug: Test File Upload
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  console.log('Test file button clicked');
+                  const testInput = document.createElement('input');
+                  testInput.type = 'file';
+                  testInput.accept = '.pdf,image/*';
+                  testInput.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    console.log('Test file selected:', file);
+                    if (file) {
+                      alert(`Test file selected: ${file.name} (${file.size} bytes)`);
+                    }
+                  };
+                  testInput.click();
+                }}
+              >
+                Test File Input
+              </Button>
+            </Box>
+            
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Button
                   variant="contained"
-                  component="label"
+                  onClick={() => {
+                    console.log('Rental file button clicked');
+                    rentalFileRef.current?.click();
+                  }}
                   fullWidth
                   sx={{ mb: 2 }}
                 >
                   Upload Rental Application (PDF)
                   <input
+                    ref={rentalFileRef}
                     type="file"
-                    hidden
+                    style={{ display: 'none' }}
                     accept=".pdf"
                     onChange={(e) => handleFileUpload(e, 'rental')}
                   />
@@ -706,14 +780,18 @@ export default function ApplicationSubmission() {
               <Grid item xs={12}>
                 <Button
                   variant="contained"
-                  component="label"
+                  onClick={() => {
+                    console.log('ID file button clicked');
+                    idFileRef.current?.click();
+                  }}
                   fullWidth
                   sx={{ mb: 2 }}
                 >
                   Upload Government ID (PDF/Image)
                   <input
+                    ref={idFileRef}
                     type="file"
-                    hidden
+                    style={{ display: 'none' }}
                     accept=".pdf,image/*"
                     onChange={(e) => handleFileUpload(e, 'id')}
                   />
@@ -722,14 +800,18 @@ export default function ApplicationSubmission() {
               <Grid item xs={12}>
                 <Button
                   variant="contained"
-                  component="label"
+                  onClick={() => {
+                    console.log('SSN file button clicked');
+                    ssnFileRef.current?.click();
+                  }}
                   fullWidth
                   sx={{ mb: 2 }}
                 >
                   Upload Social Security Card (PDF/Image)
                   <input
+                    ref={ssnFileRef}
                     type="file"
-                    hidden
+                    style={{ display: 'none' }}
                     accept=".pdf,image/*"
                     onChange={(e) => handleFileUpload(e, 'ssn')}
                   />
