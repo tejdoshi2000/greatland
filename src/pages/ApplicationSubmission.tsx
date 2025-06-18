@@ -730,32 +730,6 @@ export default function ApplicationSubmission() {
       case 2:
         return (
           <Box sx={{ mt: 2 }}>
-            {/* Debug section - remove after fixing */}
-            <Box sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: 1 }}>
-              <Typography variant="h6" gutterBottom>
-                Debug: Test File Upload
-              </Typography>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  console.log('Test file button clicked');
-                  const testInput = document.createElement('input');
-                  testInput.type = 'file';
-                  testInput.accept = '.pdf,image/*';
-                  testInput.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    console.log('Test file selected:', file);
-                    if (file) {
-                      alert(`Test file selected: ${file.name} (${file.size} bytes)`);
-                    }
-                  };
-                  testInput.click();
-                }}
-              >
-                Test File Input
-              </Button>
-            </Box>
-            
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Button
