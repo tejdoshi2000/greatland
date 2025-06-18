@@ -57,6 +57,18 @@ const emailTemplates = {
         <p><strong>Application Status:</strong> ${bookingDetails.hasApplication === 'yes' ? 'Already generated' : 'Not yet generated'}</p>
       `
     };
+  },
+  contactForm: (contactDetails) => {
+    return {
+      subject: `New Contact Form Submission from ${contactDetails.name}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${contactDetails.name}</p>
+        <p><strong>Contact Number:</strong> ${contactDetails.contactNumber}</p>
+        <p><strong>Email:</strong> ${contactDetails.email}</p>
+        <p><strong>Query:</strong><br/>${contactDetails.query}</p>
+      `
+    };
   }
 };
 

@@ -42,13 +42,19 @@ const SubmissionConfirmation: React.FC = () => {
               <ListItemIcon>
                 <Description color="primary" />
               </ListItemIcon>
-              <ListItemText primary="Driver's License" />
+              <ListItemText primary="Government ID" />
             </ListItem>
             <ListItem>
               <ListItemIcon>
                 <Description color="primary" />
               </ListItemIcon>
-              <ListItemText primary="Recent Paystubs" />
+              <ListItemText primary="Social Security Card" />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <Description color="primary" />
+              </ListItemIcon>
+              <ListItemText primary="Proof of Income Documents (if provided)" />
             </ListItem>
           </List>
 

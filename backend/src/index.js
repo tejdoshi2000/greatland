@@ -68,6 +68,7 @@ const propertyRoutes = require('./routes/properties');
 const rentalApplicationRoutes = require('./routes/rentalApplications');
 const paymentRoutes = require('./routes/payments');
 const uploadRoutes = require('./routes/upload');
+const contactRoutes = require('./routes/contact');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
@@ -76,6 +77,7 @@ app.use('/api', require('./routes/viewingSlots'));
 app.use('/api/rental-applications', rentalApplicationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/contact', contactRoutes);
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/greatland')

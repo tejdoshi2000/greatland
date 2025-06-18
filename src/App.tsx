@@ -14,6 +14,7 @@ import Admin from './pages/Admin';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Contact from './pages/Contact';
 
 // Protected Route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -44,6 +45,7 @@ const App: React.FC = () => {
             <Route path="/property/:id" element={<PropertyDetails />} />
             <Route path="/submit-application" element={<ApplicationSubmission />} />
             <Route path="/submission-confirmation" element={<SubmissionConfirmation />} />
+            <Route path="/contact" element={<Contact />} />
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />

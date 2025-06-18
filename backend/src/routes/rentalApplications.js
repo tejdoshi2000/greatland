@@ -17,7 +17,10 @@ router.get('/test', (req, res) => {
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadPath = path.join(__dirname, '../../uploads');
-    cb(null, uploadPath);
+    // Ensure uploads directory exists
+    fs.mkdir(uploadPath, { recursive: true })
+      .then(() => cb(null, uploadPath))
+      .catch(err => cb(err, uploadPath));
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -156,7 +159,7 @@ router.post('/', async (req, res) => {
 // Upload document
 router.post('/upload-document', upload.single('file'), async (req, res) => {
   try {
-    const { applicationId, type } = req.body;
+    const { applicationId, type, description } = req.body;
     const file = req.file;
 
     if (!applicationId || !type || !file) {
@@ -166,6 +169,7 @@ router.post('/upload-document', upload.single('file'), async (req, res) => {
     console.log('Uploading document:', {
       applicationId,
       type,
+      description,
       filename: file.filename,
       path: file.path
     });
@@ -178,22 +182,37 @@ router.post('/upload-document', upload.single('file'), async (req, res) => {
     // Add document to application with the correct URL path
     const documentUrl = `/uploads/${file.filename}`;
     
-    // Check if a document of this type already exists
-    const existingDocIndex = application.documents.findIndex(doc => doc.type === type);
-    if (existingDocIndex !== -1) {
-      // Update existing document
-      application.documents[existingDocIndex] = {
-        type,
-        url: documentUrl,
-        uploadedAt: new Date()
-      };
-    } else {
-      // Add new document
+    // For income documents, always add as a new document (allow multiple)
+    if (type === 'income') {
       application.documents.push({
         type,
         url: documentUrl,
-        uploadedAt: new Date()
+        uploadedAt: new Date(),
+        documentId: `${type}_${Date.now()}_${Math.round(Math.random() * 1E9)}`,
+        description: description || `Income Document ${new Date().toLocaleDateString()}`
       });
+    } else {
+      // For other document types, replace if exists, otherwise add new
+      const existingDocIndex = application.documents.findIndex(doc => doc.type === type);
+      if (existingDocIndex !== -1) {
+        // Update existing document
+        application.documents[existingDocIndex] = {
+          type,
+          url: documentUrl,
+          uploadedAt: new Date(),
+          documentId: `${type}_${Date.now()}_${Math.round(Math.random() * 1E9)}`,
+          description: description || ''
+        };
+      } else {
+        // Add new document
+        application.documents.push({
+          type,
+          url: documentUrl,
+          uploadedAt: new Date(),
+          documentId: `${type}_${Date.now()}_${Math.round(Math.random() * 1E9)}`,
+          description: description || ''
+        });
+      }
     }
 
     // Update documentsSubmitted status
@@ -543,6 +562,67 @@ router.put('/:id/documents', auth, async (req, res) => {
   }
 });
 
+// Delete individual document
+router.delete('/:applicationId/document/:documentId', async (req, res) => {
+  try {
+    const { applicationId, documentId } = req.params;
+
+    const application = await RentalApplication.findById(applicationId);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Find the document to delete
+    const documentIndex = application.documents.findIndex(doc => doc.documentId === documentId);
+    if (documentIndex === -1) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    const documentToDelete = application.documents[documentIndex];
+
+    // Delete the file from the filesystem (only if it exists)
+    if (documentToDelete.url) {
+      try {
+        // Handle both local and Render deployment paths
+        const filePath = path.join(__dirname, '../../', documentToDelete.url);
+        await fs.access(filePath); // Check if file exists
+        await fs.unlink(filePath);
+        console.log('Document file deleted:', filePath);
+      } catch (error) {
+        console.error('Error deleting document file:', error);
+        // Continue with database deletion even if file deletion fails
+        // This is especially important for Render where files might be in different locations
+      }
+    }
+
+    // Remove the document from the application
+    application.documents.splice(documentIndex, 1);
+
+    // Update documentsSubmitted status if no documents remain
+    if (application.documents.length === 0) {
+      application.documentsSubmitted = false;
+      application.status = 'generated';
+    }
+
+    await application.save();
+
+    console.log('Document deleted successfully:', {
+      applicationId,
+      documentId,
+      remainingDocuments: application.documents.length
+    });
+
+    res.json({
+      success: true,
+      message: 'Document deleted successfully',
+      remainingDocuments: application.documents.length
+    });
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    res.status(500).json({ message: 'Error deleting document' });
+  }
+});
+
 // Delete a rental application (admin only)
 router.delete('/:id', auth, async (req, res) => {
   try {
@@ -577,12 +657,16 @@ router.delete('/:id', auth, async (req, res) => {
     if (application.documents && application.documents.length > 0) {
       for (const doc of application.documents) {
         if (doc.url) {
-          const filePath = path.join(__dirname, '../../', doc.url);
           try {
+            // Handle both local and Render deployment paths
+            const filePath = path.join(__dirname, '../../', doc.url);
+            await fs.access(filePath); // Check if file exists
             await fs.unlink(filePath);
             console.log('Document file deleted:', filePath);
           } catch (error) {
             console.error('Error deleting document file:', error);
+            // Continue with deletion even if file deletion fails
+            // This is especially important for Render where files might be in different locations
           }
         }
       }

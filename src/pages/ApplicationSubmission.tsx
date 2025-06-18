@@ -16,9 +16,16 @@ import {
   IconButton,
   FormControlLabel,
   Switch,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
-import { Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import PaymentForm from '../components/RentalApplication/PaymentForm';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -38,6 +45,8 @@ interface Document {
   type: DocumentType;
   file: File;
   preview: string;
+  documentId?: string;
+  description?: string;
 }
 
 interface CoApplicant {
@@ -48,6 +57,155 @@ interface CoApplicant {
 const steps = ['Select Property', 'Applicant Information', 'Upload Documents', 'Application Fee & Payment'];
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '');
+
+// Income Document Upload Component
+interface IncomeDocumentUploadProps {
+  onUpload: (event: React.ChangeEvent<HTMLInputElement>, type: 'income', description?: string) => void;
+}
+
+const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload }) => {
+  const [description, setDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [incomeType, setIncomeType] = useState('paystub');
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = () => {
+    if (selectedFile) {
+      // Create a synthetic event for the onUpload callback
+      const syntheticEvent = {
+        target: {
+          files: [selectedFile]
+        }
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      
+      const finalDescription = description || getDefaultDescription();
+      onUpload(syntheticEvent, 'income', finalDescription);
+      
+      // Reset form
+      setDescription('');
+      setSelectedFile(null);
+      setIncomeType('paystub');
+    }
+  };
+
+  const getDefaultDescription = () => {
+    const currentDate = new Date();
+    switch (incomeType) {
+      case 'paystub':
+        return `Paystub ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      case 'social_security':
+        return `Social Security Benefits ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      case 'public_assistance':
+        return `Public Assistance ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      case 'disability':
+        return `Disability Benefits ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      case 'pension':
+        return `Pension ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      case 'other':
+        return `Other Income ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      default:
+        return `Income Document ${currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+    }
+  };
+
+  const getMonthOptions = () => {
+    const months = [];
+    const currentDate = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthYear = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      months.push(monthYear);
+    }
+    return months;
+  };
+
+  return (
+    <Box sx={{ border: 1, borderColor: 'grey.300', borderRadius: 1, p: 2 }}>
+      <Typography variant="subtitle2" gutterBottom>
+        Upload Proof of Income Documents
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Upload your income documents such as paystubs, social security benefits, public assistance letters, etc.
+      </Typography>
+      
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Income Type</InputLabel>
+            <Select
+              value={incomeType}
+              onChange={(e) => setIncomeType(e.target.value)}
+              label="Income Type"
+            >
+              <MenuItem value="paystub">Paystub</MenuItem>
+              <MenuItem value="social_security">Social Security Benefits</MenuItem>
+              <MenuItem value="public_assistance">Public Assistance</MenuItem>
+              <MenuItem value="disability">Disability Benefits</MenuItem>
+              <MenuItem value="pension">Pension</MenuItem>
+              <MenuItem value="other">Other Income</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Period</InputLabel>
+            <Select
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              label="Period"
+            >
+              {getMonthOptions().map((month) => (
+                <MenuItem key={month} value={month}>
+                  {month}
+                </MenuItem>
+              ))}
+              <MenuItem value="Other">Other</MenuItem>
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} sm={3}>
+          <Button
+            variant="outlined"
+            component="label"
+            fullWidth
+            size="small"
+          >
+            Select File
+            <input
+              type="file"
+              hidden
+              accept=".pdf,image/*"
+              onChange={handleFileSelect}
+            />
+          </Button>
+          {selectedFile && (
+            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+              Selected: {selectedFile.name}
+            </Typography>
+          )}
+        </Grid>
+        <Grid item xs={12} sm={3}>
+          <Button
+            variant="contained"
+            onClick={handleUpload}
+            disabled={!selectedFile}
+            fullWidth
+            size="small"
+            startIcon={<AddIcon />}
+          >
+            Upload
+          </Button>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
 
 export default function ApplicationSubmission() {
   const [activeStep, setActiveStep] = useState(0);
@@ -103,7 +261,9 @@ export default function ApplicationSubmission() {
           const docs = data.documents?.map((doc: any) => ({
             type: doc.type,
             file: new File([], doc.url.split('/').pop() || ''),
-            preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (doc.url || '')
+            preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (doc.url || ''),
+            documentId: doc.documentId || doc._id,
+            description: doc.description
           })) || [];
           setDocuments(docs);
           return true;
@@ -200,6 +360,9 @@ export default function ApplicationSubmission() {
         return;
       }
 
+      // Income documents are optional (applicant might be unemployed)
+      // No validation needed for income documents
+
       // Update application status to pending_payment
       if (applicationId) {
         try {
@@ -275,7 +438,7 @@ export default function ApplicationSubmission() {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: Document['type']) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: Document['type'], description?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -318,6 +481,9 @@ export default function ApplicationSubmission() {
       formData.append('file', file);
       formData.append('type', type);
       formData.append('applicationId', applicationId);
+      if (description) {
+        formData.append('description', description);
+      }
 
       const uploadResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications/upload-document', {
         method: 'POST',
@@ -331,7 +497,21 @@ export default function ApplicationSubmission() {
 
       const uploadData = await uploadResponse.json();
 
-      // Update documents state: replace if type exists, else add
+      // Update documents state: for income documents, add to the list; for others, replace
+      if (type === 'income') {
+        // Add new income document to the list
+        const uploadedDoc = uploadData.documents.find((d: any) => d.type === type && d.description === description);
+        const newDocument = {
+          type,
+          file,
+          preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadedDoc?.url || ''),
+          documentId: uploadedDoc?.documentId || uploadedDoc?._id,
+          description: description || `Paystub ${new Date().toLocaleDateString()}`
+        };
+        setDocuments(prev => [...prev, newDocument]);
+      } else {
+        // Replace existing document of the same type
+        const uploadedDoc = uploadData.documents.find((d: any) => d.type === type);
       setDocuments(prev => {
         const filtered = prev.filter(doc => doc.type !== type);
         return [
@@ -339,10 +519,13 @@ export default function ApplicationSubmission() {
           {
             type,
             file,
-            preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadData.documents.find((d: any) => d.type === type)?.url || '')
+              preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (uploadedDoc?.url || ''),
+              documentId: uploadedDoc?.documentId || uploadedDoc?._id,
+              description: uploadedDoc?.description
           }
         ];
       });
+      }
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -356,6 +539,44 @@ export default function ApplicationSubmission() {
 
   const removeDocument = (index: number) => {
     setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const deleteDocument = async (documentId: string, index: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!applicationId) {
+        setError('Application not found');
+        return;
+      }
+
+      if (!documentId) {
+        // If no documentId, just remove from local state (for documents that weren't uploaded yet)
+        setDocuments(prev => prev.filter((_, i) => i !== index));
+        return;
+      }
+
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/document/${documentId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete document');
+      }
+
+      // Remove the document from the local state
+      setDocuments(prev => prev.filter((_, i) => i !== index));
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePaymentSuccess = () => {
@@ -515,20 +736,13 @@ export default function ApplicationSubmission() {
                 </Button>
               </Grid>
               <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  component="label"
-                  fullWidth
-                  sx={{ mb: 2 }}
-                >
-                  Upload Proof of Income (PDF/Image)
-                  <input
-                    type="file"
-                    hidden
-                    accept=".pdf,image/*"
-                    onChange={(e) => handleFileUpload(e, 'income')}
-                  />
-                </Button>
+                <Typography variant="h6" gutterBottom>
+                  Proof of Income (Optional)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Upload your last 3 months of paystubs. If you are unemployed, you may skip this section.
+                </Typography>
+                <IncomeDocumentUpload onUpload={handleFileUpload} />
               </Grid>
             </Grid>
             {documents.length > 0 && (
@@ -539,9 +753,21 @@ export default function ApplicationSubmission() {
                 {documents.map((doc, index) => (
                   <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     <Typography sx={{ flex: 1 }}>
-                      {doc.type.charAt(0).toUpperCase() + doc.type.slice(1)} Document
+                      {doc.type === 'income' && doc.description 
+                        ? doc.description
+                        : `${doc.type.charAt(0).toUpperCase() + doc.type.slice(1)} Document`
+                      }
                     </Typography>
-                    <IconButton onClick={() => removeDocument(index)} color="error">
+                    <IconButton 
+                      onClick={() => {
+                        if (doc.documentId) {
+                          deleteDocument(doc.documentId, index);
+                        } else {
+                          removeDocument(index);
+                        }
+                      }} 
+                      color="error"
+                    >
                       <DeleteIcon />
                     </IconButton>
                   </Box>

@@ -43,6 +43,24 @@ const sendSlotBookedEmail = async (bookingDetails) => {
   }
 };
 
+const sendContactEmail = async (contactDetails) => {
+  try {
+    const { subject, html } = emailTemplates.contactForm(contactDetails);
+    const mailOptions = {
+      from: emailConfig.from,
+      to: emailConfig.adminEmail,
+      subject,
+      html,
+    };
+    const info = await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error('Error sending contact email:', error);
+    return false;
+  }
+};
+
 module.exports = {
   sendSlotBookedEmail,
+  sendContactEmail,
 }; 

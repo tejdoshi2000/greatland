@@ -53,6 +53,8 @@ interface RentalApplication {
     type: string;
     url: string;
     uploadedAt: string;
+    documentId?: string;
+    description?: string;
   }>;
   documentsSubmitted: boolean;
   applicationDate: string;
@@ -310,19 +312,40 @@ const RentalApplications: React.FC = () => {
   const handleViewDocuments = (application: RentalApplication) => {
     console.log('Viewing documents for application:', {
       id: application._id,
-      documents: application.documents
+      applicantName: application.applicantName,
+      documentCount: application.documents?.length || 0,
+      documents: application.documents?.map(doc => ({
+        type: doc.type,
+        description: doc.description,
+        documentId: doc.documentId,
+        url: doc.url,
+        uploadedAt: doc.uploadedAt
+      })) || []
     });
     setSelectedApplication(application);
     setShowDocuments(true);
   };
 
   const handleViewDocument = (documentUrl: string) => {
-    // Ensure the URL is absolute and properly formatted
-    const absoluteUrl = documentUrl.startsWith('http') 
-      ? documentUrl 
-      : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + documentUrl;
-    console.log('Viewing document:', absoluteUrl);
-    setSelectedDocument(absoluteUrl);
+    try {
+      // Ensure the URL is absolute and properly formatted
+      const absoluteUrl = documentUrl.startsWith('http') 
+        ? documentUrl 
+        : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + documentUrl;
+      console.log('Viewing document:', {
+        originalUrl: documentUrl,
+        absoluteUrl: absoluteUrl,
+        apiUrl: process.env.REACT_APP_API_URL
+      });
+      setSelectedDocument(absoluteUrl);
+    } catch (error) {
+      console.error('Error constructing document URL:', error);
+      setSnackbar({
+        open: true,
+        message: 'Error loading document',
+        severity: 'error'
+      });
+    }
   };
 
   const handleDeleteClick = async (applicationId: string) => {
@@ -874,12 +897,18 @@ const RentalApplications: React.FC = () => {
             <Box>
               <Grid container spacing={2}>
                 {selectedApplication.documents && selectedApplication.documents.map((doc, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
+                  <Grid item xs={12} sm={6} key={doc.documentId || index}>
                     <Paper sx={{ p: 2 }}>
-                      <Typography variant="subtitle1">
-                        {doc.type.charAt(0).toUpperCase() + doc.type.slice(1)}
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {doc.type === 'income' && doc.description 
+                          ? doc.description
+                          : doc.type.charAt(0).toUpperCase() + doc.type.slice(1) + ' Document'
+                        }
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
+                      <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+                        Type: {doc.type.charAt(0).toUpperCase() + doc.type.slice(1)}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
                         Uploaded: {format(new Date(doc.uploadedAt), 'MM/dd/yyyy HH:mm')}
                       </Typography>
                       <Button
@@ -887,12 +916,20 @@ const RentalApplications: React.FC = () => {
                         size="small"
                         onClick={() => handleViewDocument(doc.url)}
                         sx={{ mt: 1 }}
+                        fullWidth
                       >
                         View Document
                       </Button>
                     </Paper>
                   </Grid>
                 ))}
+                {(!selectedApplication.documents || selectedApplication.documents.length === 0) && (
+                  <Grid item xs={12}>
+                    <Typography variant="body1" color="textSecondary" align="center">
+                      No documents uploaded yet.
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
             </Box>
           )}
