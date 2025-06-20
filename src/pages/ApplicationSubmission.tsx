@@ -23,7 +23,9 @@ import {
   DialogActions,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import PaymentForm from '../components/RentalApplication/PaymentForm';
@@ -68,6 +70,8 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [incomeType, setIncomeType] = useState('paystub');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('File select event triggered:', event);
@@ -143,7 +147,13 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
   };
 
   return (
-    <Box sx={{ border: 1, borderColor: 'grey.300', borderRadius: 1, p: 2 }}>
+    <Box sx={{ 
+      border: 1, 
+      borderColor: 'grey.300', 
+      borderRadius: 1, 
+      p: { xs: 1.5, sm: 2 },
+      mt: 2
+    }}>
       <Typography variant="subtitle2" gutterBottom>
         Upload Proof of Income Documents
       </Typography>
@@ -151,8 +161,8 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
         Upload your income documents such as paystubs, social security benefits, public assistance letters, etc.
       </Typography>
       
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={3}>
+      <Grid container spacing={{ xs: 1, sm: 2 }} alignItems="center">
+        <Grid item xs={12} sm={6} md={3}>
           <FormControl fullWidth size="small">
             <InputLabel>Income Type</InputLabel>
             <Select
@@ -169,7 +179,7 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <FormControl fullWidth size="small">
             <InputLabel>Period</InputLabel>
             <Select
@@ -186,12 +196,16 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
             </Select>
           </FormControl>
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <Button
             variant="outlined"
             onClick={handleFileButtonClick}
             fullWidth
             size="small"
+            sx={{ 
+              minHeight: { xs: '48px', sm: '40px' },
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
           >
             Select File
           </Button>
@@ -202,25 +216,31 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
             accept=".pdf,image/*"
             onChange={handleFileSelect}
           />
-          {selectedFile && (
-            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-              Selected: {selectedFile.name}
-            </Typography>
-          )}
         </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={6} md={3}>
           <Button
             variant="contained"
             onClick={handleUpload}
             disabled={!selectedFile}
             fullWidth
             size="small"
-            startIcon={<AddIcon />}
+            sx={{ 
+              minHeight: { xs: '48px', sm: '40px' },
+              fontSize: { xs: '0.875rem', sm: '0.875rem' }
+            }}
           >
             Upload
           </Button>
         </Grid>
       </Grid>
+      
+      {selectedFile && (
+        <Box sx={{ mt: 2, p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Selected: {selectedFile.name}
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };
@@ -249,6 +269,10 @@ export default function ApplicationSubmission() {
   const rentalFileRef = React.useRef<HTMLInputElement>(null);
   const idFileRef = React.useRef<HTMLInputElement>(null);
   const ssnFileRef = React.useRef<HTMLInputElement>(null);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -661,10 +685,14 @@ export default function ApplicationSubmission() {
               value={selectedProperty}
               onChange={(e) => setSelectedProperty(e.target.value)}
               sx={{ mb: 2 }}
+              size={isMobile ? "medium" : "small"}
             >
               {properties.map((property) => (
                 <MenuItem key={property._id} value={property._id}>
-                  {property.title} - ${property.price}
+                  {isMobile 
+                    ? `${property.title} - $${property.price}`
+                    : `${property.title} - ${property.location} - $${property.price}`
+                  }
                 </MenuItem>
               ))}
             </TextField>
@@ -681,6 +709,7 @@ export default function ApplicationSubmission() {
               onChange={(e) => setEmail(e.target.value)}
               required
               sx={{ mb: 2 }}
+              size={isMobile ? "medium" : "small"}
             />
             <FormControlLabel
               control={
@@ -690,7 +719,12 @@ export default function ApplicationSubmission() {
                 />
               }
               label="I am the principal applicant (head of household)"
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: 2,
+                '& .MuiFormControlLabel-label': {
+                  fontSize: { xs: '0.875rem', sm: '1rem' }
+                }
+              }}
             />
             {isPrincipalApplicant && (
               <>
@@ -702,6 +736,7 @@ export default function ApplicationSubmission() {
                   onChange={handleNumberOfAdultsChange}
                   inputProps={{ min: 1 }}
                   sx={{ mb: 2 }}
+                  size={isMobile ? "medium" : "small"}
                 />
                 {coApplicantEmails.map((email, index) => (
                   <TextField
@@ -712,13 +747,18 @@ export default function ApplicationSubmission() {
                     value={email}
                     onChange={(e) => handleCoApplicantEmailChange(index, e.target.value)}
                     sx={{ mb: 2 }}
+                    size={isMobile ? "medium" : "small"}
                   />
                 ))}
                 {coApplicantEmails.length < numberOfAdults - 1 && (
                   <Button
                     variant="outlined"
                     onClick={handleAddCoApplicant}
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: 2,
+                      minHeight: { xs: '48px', sm: '40px' }
+                    }}
+                    fullWidth={isMobile}
                   >
                     Add Co-Applicant
                   </Button>
@@ -730,7 +770,7 @@ export default function ApplicationSubmission() {
       case 2:
         return (
           <Box sx={{ mt: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1, sm: 2 }}>
               <Grid item xs={12}>
                 <Button
                   variant="contained"
@@ -739,7 +779,11 @@ export default function ApplicationSubmission() {
                     rentalFileRef.current?.click();
                   }}
                   fullWidth
-                  sx={{ mb: 2 }}
+                  sx={{ 
+                    mb: 2,
+                    minHeight: { xs: '56px', sm: '48px' },
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }}
                 >
                   Upload Rental Application (PDF)
                   <input
@@ -759,7 +803,11 @@ export default function ApplicationSubmission() {
                     idFileRef.current?.click();
                   }}
                   fullWidth
-                  sx={{ mb: 2 }}
+                  sx={{ 
+                    mb: 2,
+                    minHeight: { xs: '56px', sm: '48px' },
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }}
                 >
                   Upload Government ID (PDF/Image)
                   <input
@@ -779,7 +827,11 @@ export default function ApplicationSubmission() {
                     ssnFileRef.current?.click();
                   }}
                   fullWidth
-                  sx={{ mb: 2 }}
+                  sx={{ 
+                    mb: 2,
+                    minHeight: { xs: '56px', sm: '48px' },
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }}
                 >
                   Upload Social Security Card (PDF/Image)
                   <input
@@ -807,8 +859,24 @@ export default function ApplicationSubmission() {
                   Uploaded Documents
                 </Typography>
                 {documents.map((doc, index) => (
-                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography sx={{ flex: 1 }}>
+                  <Box 
+                    key={index} 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      mb: 1,
+                      p: 1,
+                      bgcolor: 'grey.50',
+                      borderRadius: 1,
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      gap: { xs: 1, sm: 0 }
+                    }}
+                  >
+                    <Typography sx={{ 
+                      flex: 1,
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      textAlign: { xs: 'center', sm: 'left' }
+                    }}>
                       {doc.type === 'income' && doc.description 
                         ? doc.description
                         : `${doc.type.charAt(0).toUpperCase() + doc.type.slice(1)} Document`
@@ -823,6 +891,7 @@ export default function ApplicationSubmission() {
                         }
                       }} 
                       color="error"
+                      size={isMobile ? "large" : "medium"}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -836,9 +905,13 @@ export default function ApplicationSubmission() {
         return (
           <Box sx={{ mt: 2 }}>
             {paymentLoading ? (
-              <CircularProgress />
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
             ) : paymentError ? (
-              <Alert severity="error">{paymentError}</Alert>
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {paymentError}
+              </Alert>
             ) : paymentInfo ? (
               <>
                 <Typography variant="h6" gutterBottom>
@@ -872,21 +945,58 @@ export default function ApplicationSubmission() {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper sx={{ p: 3 }}>
+    <Container 
+      maxWidth="md" 
+      sx={{ 
+        py: { xs: 2, sm: 4 },
+        px: { xs: 1, sm: 2 }
+      }}
+    >
+      <Paper sx={{ 
+        p: { xs: 2, sm: 3 },
+        borderRadius: { xs: 1, sm: 2 }
+      }}>
         {!isPrincipalApplicant && (
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <b>Co-Applicant Instructions:</b><br />
-            1. Enter the <b>same property</b> and <b>your email address</b> as provided by your principal applicant.<br />
-            2. Upload all required documents.<br />
-            3. If your principal applicant has already paid, you will not be asked to pay again.<br />
-            4. If you encounter any issues, please contact the principal applicant or support.
+          <Alert severity="info" sx={{ 
+            mb: 3,
+            '& .MuiAlert-message': {
+              fontSize: { xs: '0.875rem', sm: '1rem' }
+            }
+          }}>
+            <Box sx={{ 
+              '& b': { 
+                fontSize: { xs: '0.875rem', sm: '1rem' } 
+              }
+            }}>
+              <b>Co-Applicant Instructions:</b><br />
+              1. Enter the <b>same property</b> and <b>your email address</b> as provided by your principal applicant.<br />
+              2. Upload all required documents.<br />
+              3. If your principal applicant has already paid, you will not be asked to pay again.<br />
+              4. If you encounter any issues, please contact the principal applicant or support.
+            </Box>
           </Alert>
         )}
-        <Typography variant="h4" gutterBottom align="center">
+        <Typography 
+          variant="h4" 
+          gutterBottom 
+          align="center"
+          sx={{
+            fontSize: { xs: '1.75rem', sm: '2.125rem', md: '2.5rem' },
+            mb: { xs: 2, sm: 3 }
+          }}
+        >
           Rental Application
         </Typography>
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        <Stepper 
+          activeStep={activeStep} 
+          sx={{ 
+            mb: 4,
+            '& .MuiStepLabel-label': {
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }
+          }}
+          orientation={isMobile ? "vertical" : "horizontal"}
+        >
           {steps.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
@@ -909,10 +1019,22 @@ export default function ApplicationSubmission() {
           </Box>
         )}
         {getStepContent(activeStep)}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          mt: 3,
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 2, sm: 0 }
+        }}>
           <Button
             disabled={activeStep === 0}
             onClick={handleBack}
+            variant="outlined"
+            fullWidth={isMobile}
+            sx={{
+              minHeight: { xs: '48px', sm: '40px' },
+              order: { xs: 2, sm: 1 }
+            }}
           >
             Back
           </Button>
@@ -920,6 +1042,11 @@ export default function ApplicationSubmission() {
             variant="contained"
             onClick={handleNext}
             disabled={activeStep === steps.length - 1 || loading}
+            fullWidth={isMobile}
+            sx={{
+              minHeight: { xs: '48px', sm: '40px' },
+              order: { xs: 1, sm: 2 }
+            }}
           >
             {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
           </Button>
