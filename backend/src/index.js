@@ -13,7 +13,8 @@ console.log('--- Greatland Backend Server ---');
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL || 'http://localhost:3000',
-    'https://greatland-frontend.onrender.com'
+    'https://greatland-frontend.onrender.com',
+    'https://www.mygreatland.com'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -56,7 +57,15 @@ if (!fs.existsSync(applicationsDir)) {
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res, path) => {
     // Add CORS headers for uploaded files
-    res.set('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3000');
+    const allowedOrigins = [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'https://greatland-frontend.onrender.com',
+      'https://www.greatland.com'
+    ];
+    const requestOrigin = res.req.headers.origin;
+    if (allowedOrigins.includes(requestOrigin)) {
+      res.set('Access-Control-Allow-Origin', requestOrigin);
+    }
     res.set('Access-Control-Allow-Methods', 'GET');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
   }
