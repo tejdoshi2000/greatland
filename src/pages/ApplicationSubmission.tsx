@@ -677,7 +677,7 @@ export default function ApplicationSubmission() {
     switch (step) {
       case 0:
         return (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <TextField
               select
               fullWidth
@@ -689,10 +689,29 @@ export default function ApplicationSubmission() {
             >
               {properties.map((property) => (
                 <MenuItem key={property._id} value={property._id}>
-                  {isMobile 
-                    ? `${property.title} - $${property.price}`
-                    : `${property.title} - ${property.location} - $${property.price}`
-                  }
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: { xs: 0.5, sm: 1 }
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        fontWeight: 500
+                      }}
+                    >
+                      {property.title}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
+                      ${property.price}
+                    </Typography>
+                  </Box>
                 </MenuItem>
               ))}
             </TextField>
@@ -700,7 +719,7 @@ export default function ApplicationSubmission() {
         );
       case 1:
         return (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <TextField
               fullWidth
               label="Email"
@@ -716,15 +735,18 @@ export default function ApplicationSubmission() {
                 <Switch
                   checked={isPrincipalApplicant}
                   onChange={(e) => setIsPrincipalApplicant(e.target.checked)}
+                  size={isMobile ? "small" : "medium"}
                 />
               }
-              label="I am the principal applicant (head of household)"
-              sx={{ 
-                mb: 2,
-                '& .MuiFormControlLabel-label': {
-                  fontSize: { xs: '0.875rem', sm: '1rem' }
-                }
-              }}
+              label={
+                <Typography sx={{ 
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  lineHeight: { xs: 1.3, sm: 1.5 }
+                }}>
+                  I am the principal applicant (head of household)
+                </Typography>
+              }
+              sx={{ mb: 2 }}
             />
             {isPrincipalApplicant && (
               <>
@@ -756,9 +778,11 @@ export default function ApplicationSubmission() {
                     onClick={handleAddCoApplicant}
                     sx={{ 
                       mb: 2,
-                      minHeight: { xs: '48px', sm: '40px' }
+                      minHeight: { xs: '48px', sm: '40px' },
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
                     }}
                     fullWidth={isMobile}
+                    size={isMobile ? "large" : "medium"}
                   >
                     Add Co-Applicant
                   </Button>
@@ -769,7 +793,7 @@ export default function ApplicationSubmission() {
         );
       case 2:
         return (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <Grid container spacing={{ xs: 1, sm: 2 }}>
               <Grid item xs={12}>
                 <Button
@@ -784,6 +808,7 @@ export default function ApplicationSubmission() {
                     minHeight: { xs: '56px', sm: '48px' },
                     fontSize: { xs: '0.875rem', sm: '1rem' }
                   }}
+                  size={isMobile ? "large" : "large"}
                 >
                   Upload Rental Application (PDF)
                   <input
@@ -808,6 +833,7 @@ export default function ApplicationSubmission() {
                     minHeight: { xs: '56px', sm: '48px' },
                     fontSize: { xs: '0.875rem', sm: '1rem' }
                   }}
+                  size={isMobile ? "large" : "large"}
                 >
                   Upload Government ID (PDF/Image)
                   <input
@@ -832,6 +858,7 @@ export default function ApplicationSubmission() {
                     minHeight: { xs: '56px', sm: '48px' },
                     fontSize: { xs: '0.875rem', sm: '1rem' }
                   }}
+                  size={isMobile ? "large" : "large"}
                 >
                   Upload Social Security Card (PDF/Image)
                   <input
@@ -844,10 +871,24 @@ export default function ApplicationSubmission() {
                 </Button>
               </Grid>
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{ 
+                    fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                    fontWeight: 600
+                  }}
+                >
                   Proof of Income (Optional)
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  sx={{ 
+                    mb: 2,
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  }}
+                >
                   Upload your last 3 months of paystubs. If you are unemployed, you may skip this section.
                 </Typography>
                 <IncomeDocumentUpload onUpload={handleFileUpload} />
@@ -855,7 +896,14 @@ export default function ApplicationSubmission() {
             </Grid>
             {documents.length > 0 && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="h6" gutterBottom>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{ 
+                    fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                    fontWeight: 600
+                  }}
+                >
                   Uploaded Documents
                 </Typography>
                 {documents.map((doc, index) => (
@@ -875,7 +923,8 @@ export default function ApplicationSubmission() {
                     <Typography sx={{ 
                       flex: 1,
                       fontSize: { xs: '0.875rem', sm: '1rem' },
-                      textAlign: { xs: 'center', sm: 'left' }
+                      textAlign: { xs: 'center', sm: 'left' },
+                      wordBreak: 'break-word'
                     }}>
                       {doc.type === 'income' && doc.description 
                         ? doc.description
@@ -903,7 +952,7 @@ export default function ApplicationSubmission() {
         );
       case 3:
         return (
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             {paymentLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                 <CircularProgress />
@@ -914,7 +963,14 @@ export default function ApplicationSubmission() {
               </Alert>
             ) : paymentInfo ? (
               <>
-                <Typography variant="h6" gutterBottom>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom
+                  sx={{ 
+                    fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                    fontWeight: 600
+                  }}
+                >
                   {paymentInfo.message}
                 </Typography>
                 {paymentInfo.totalDue > 0 ? (
@@ -935,7 +991,9 @@ export default function ApplicationSubmission() {
                 )}
               </>
             ) : (
-              <Typography>No payment information available.</Typography>
+              <Typography sx={{ fontSize: { xs: '1rem', sm: '1.125rem' } }}>
+                No payment information available.
+              </Typography>
             )}
           </Box>
         );
