@@ -32,7 +32,7 @@ const Portfolio: React.FC = () => {
       bathrooms: 2.5,
       squareFeet: 2800,
       description: 'An elegant beachfront property with contemporary design.',
-      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750255849/3245_Portage_Way_Exterior-9_ipxfvy.jpg'],
+      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750388714/3245_Portage_Way_Exterior-9_htwi6u.jpg'],
       amenities: ['Ocean View', 'Private Garden', 'Garage'],
       rentedDate: '2023-12-01'
     },
@@ -45,7 +45,7 @@ const Portfolio: React.FC = () => {
       bathrooms: 2,
       squareFeet: 2500,
       description: 'A charming property surrounded by lush gardens.',
-      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750255849/IMG_8962_aamefo.jpg'],
+      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750388714/IMG_8962_uaujyw.jpg'],
       amenities: ['Garden', 'Modern Kitchen', 'Garage'],
       rentedDate: '2023-11-15'
     },
@@ -58,7 +58,7 @@ const Portfolio: React.FC = () => {
       bathrooms: 2,
       squareFeet: 2200,
       description: 'A unique property with panoramic views.',
-      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750255849/241_Picasso_Circle_2_r5vf8u.jpg'],
+      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750388714/241_Picasso_Circle_2_xu6t8b.jpg'],
       amenities: ['Mountain View', 'Private Garden', 'Garage'],
       rentedDate: '2023-10-01'
     },
@@ -71,7 +71,7 @@ const Portfolio: React.FC = () => {
       bathrooms: 2,
       squareFeet: 2000,
       description: 'A waterfront property with stunning views.',
-      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750255848/Mahaska_Pictures_001_vnbljz.jpg'],
+      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750388714/Mahaska_Pictures_001_av0fqe.jpg'],
       amenities: ['Waterfront', 'Private Dock', 'Garage'],
       rentedDate: '2023-09-15'
     },
@@ -84,7 +84,7 @@ const Portfolio: React.FC = () => {
       bathrooms: 2,
       squareFeet: 1800,
       description: 'A modern urban property with city views.',
-      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750255847/Diorite-1_onvepx.jpg'],
+      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750388713/03_3652_Odessa_Lane_go2icn.jpg'],
       amenities: ['City View', 'Modern Kitchen', 'Garage'],
       rentedDate: '2023-08-01'
     },
@@ -97,7 +97,7 @@ const Portfolio: React.FC = () => {
       bathrooms: 2,
       squareFeet: 1600,
       description: 'An exclusive beachfront property.',
-      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750255848/03_3652_Odessa_Lane_uogiau.jpg'],
+      images: ['https://res.cloudinary.com/dtwadr8s8/image/upload/v1750388713/Diorite-1_k9sknb.jpg'],
       amenities: ['Beachfront', 'Modern Kitchen', 'Garage'],
       rentedDate: '2023-07-15'
     }
