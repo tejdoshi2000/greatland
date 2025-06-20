@@ -12,6 +12,7 @@ import {
   Stack,
   IconButton,
   Tooltip,
+  useMediaQuery,
 } from '@mui/material';
 import BedIcon from '@mui/icons-material/Bed';
 import BathtubIcon from '@mui/icons-material/Bathtub';
@@ -21,6 +22,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const Portfolio: React.FC = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const properties = [
     {
@@ -105,35 +108,37 @@ const Portfolio: React.FC = () => {
 
   return (
     <Box sx={{ 
-      py: 8,
+      py: { xs: 4, md: 8 },
       backgroundColor: '#f8f9fa',
       minHeight: '100vh'
     }}>
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
         <Box sx={{ 
           textAlign: 'center', 
-          mb: 8,
+          mb: { xs: 4, md: 8 },
           position: 'relative',
           '&::after': {
             content: '""',
             position: 'absolute',
-            bottom: -20,
+            bottom: { xs: -15, md: -20 },
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '100px',
-            height: '4px',
+            width: { xs: '60px', sm: '80px', md: '100px' },
+            height: { xs: '3px', md: '4px' },
             background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
             borderRadius: '2px'
           }
         }}>
           <Typography 
-            variant="h3" 
+            variant="h2" 
             component="h1" 
             gutterBottom
             sx={{ 
               fontWeight: 700,
               color: theme.palette.primary.main,
-              mb: 2
+              mb: { xs: 1.5, md: 2 },
+              fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
+              lineHeight: { xs: 1.2, md: 1.1 }
             }}
           >
             Our Success Stories
@@ -144,21 +149,23 @@ const Portfolio: React.FC = () => {
             sx={{ 
               maxWidth: '800px', 
               margin: '0 auto',
-              opacity: 0.8
+              opacity: 0.8,
+              fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+              lineHeight: 1.5
             }}
           >
             Discover our portfolio of premium properties that have found their perfect tenants
           </Typography>
         </Box>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
           {properties.map((property) => (
-            <Grid item xs={12} md={6} key={property.id}>
+            <Grid item xs={12} sm={6} lg={4} key={property.id}>
               <Card 
                 sx={{ 
                   height: '100%',
                   display: 'flex',
-                  flexDirection: { xs: 'column', md: 'row' },
+                  flexDirection: 'column',
                   overflow: 'hidden',
                   transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
                   '&:hover': {
@@ -170,8 +177,8 @@ const Portfolio: React.FC = () => {
                 <CardMedia
                   component="img"
                   sx={{ 
-                    width: { xs: '100%', md: '40%' },
-                    height: { xs: 240, md: 'auto' }
+                    width: '100%',
+                    height: { xs: 200, sm: 220, md: 240 }
                   }}
                   image={property.images && property.images.length > 0 ? property.images[0] : '/default-placeholder.png'}
                   alt={property.title}
@@ -180,40 +187,107 @@ const Portfolio: React.FC = () => {
                   flex: 1,
                   display: 'flex',
                   flexDirection: 'column',
-                  p: 3
+                  p: { xs: 2, sm: 2.5, md: 3 }
                 }}>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+                  <Box sx={{ mb: { xs: 1.5, md: 2 } }}>
+                    <Typography 
+                      variant="h5" 
+                      gutterBottom 
+                      sx={{ 
+                        fontWeight: 600,
+                        fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' },
+                        mb: { xs: 0.5, md: 1 }
+                      }}
+                    >
                       {property.title}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <LocationOnIcon sx={{ color: 'text.secondary', mr: 1, fontSize: 20 }} />
-                      <Typography variant="body2" color="text.secondary">
+                      <LocationOnIcon 
+                        sx={{ 
+                          color: 'text.secondary', 
+                          mr: 1, 
+                          fontSize: { xs: 16, sm: 18, md: 20 } 
+                        }} 
+                      />
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                      >
                         {property.address}
                       </Typography>
                     </Box>
                   </Box>
 
-                  <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <BedIcon color="action" />
-                      <Typography variant="body2">{property.bedrooms} bd</Typography>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: { xs: 2, sm: 3 }, 
+                    mb: { xs: 1.5, md: 2 },
+                    flexWrap: 'wrap'
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <BedIcon 
+                        color="action" 
+                        sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
+                      />
+                      <Typography 
+                        variant="body2"
+                        sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                      >
+                        {property.bedrooms} bd
+                      </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <BathtubIcon color="action" />
-                      <Typography variant="body2">{property.bathrooms} ba</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <BathtubIcon 
+                        color="action"
+                        sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
+                      />
+                      <Typography 
+                        variant="body2"
+                        sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                      >
+                        {property.bathrooms} ba
+                      </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SquareFootIcon color="action" />
-                      <Typography variant="body2">{property.squareFeet} sqft</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <SquareFootIcon 
+                        color="action"
+                        sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
+                      />
+                      <Typography 
+                        variant="body2"
+                        sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                      >
+                        {property.squareFeet} sqft
+                      </Typography>
                     </Box>
                   </Box>
 
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ 
+                      mb: { xs: 1.5, md: 2 },
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                      lineHeight: 1.5
+                    }}
+                  >
                     {property.description}
                   </Typography>
 
-                  <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                  <Stack 
+                    direction="row" 
+                    spacing={1} 
+                    sx={{ 
+                      mb: { xs: 1.5, md: 2 }, 
+                      flexWrap: 'wrap', 
+                      gap: 1,
+                      '& .MuiChip-root': {
+                        fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                        height: { xs: 20, sm: 24 }
+                      }
+                    }}
+                  >
                     {property.amenities.map((amenity, index) => (
                       <Chip
                         key={index}
@@ -232,19 +306,28 @@ const Portfolio: React.FC = () => {
 
                   <Box sx={{ 
                     mt: 'auto',
-                    pt: 2,
+                    pt: { xs: 1.5, md: 2 },
                     borderTop: '1px solid',
                     borderColor: 'divider',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                    >
                       Successfully Rented
                     </Typography>
                     <Tooltip title="Successfully Rented">
-                      <IconButton sx={{ color: 'success.main' }}>
-                        <CheckCircleIcon />
+                      <IconButton 
+                        sx={{ 
+                          color: 'success.main',
+                          p: { xs: 0.5, sm: 1 }
+                        }}
+                      >
+                        <CheckCircleIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
                       </IconButton>
                     </Tooltip>
                   </Box>

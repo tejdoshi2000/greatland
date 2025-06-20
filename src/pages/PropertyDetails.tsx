@@ -21,6 +21,7 @@ import {
   useTheme,
   SwipeableDrawer,
   CircularProgress,
+  Chip,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { RentalApplication } from '../components/RentalApplication/RentalApplication';
@@ -57,9 +58,13 @@ interface PropertyDetail {
 
 const GalleryGrid = styled('div')(({ theme }) => ({
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-  gap: theme.spacing(2),
+  gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+  gap: theme.spacing(1),
   marginTop: theme.spacing(2),
+  [theme.breakpoints.up('sm')]: {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+    gap: theme.spacing(2),
+  },
 }));
 
 const PropertyDetails: React.FC = () => {
@@ -129,21 +134,31 @@ const PropertyDetails: React.FC = () => {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <CircularProgress />
+        <CircularProgress size={60} />
       </Box>
     );
   }
 
   if (error || !property) {
     return (
-      <Container>
-        <Typography color="error" variant="h5">
+      <Container sx={{ py: { xs: 2, md: 4 }, px: { xs: 2, sm: 3, md: 4 } }}>
+        <Typography 
+          color="error" 
+          variant="h5"
+          sx={{ 
+            fontSize: { xs: '1.25rem', sm: '1.5rem' },
+            mb: 2
+          }}
+        >
           {error || 'Property not found'}
         </Typography>
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/properties')}
-          sx={{ mt: 2 }}
+          sx={{ 
+            mt: 2,
+            fontSize: { xs: '0.9rem', sm: '1rem' }
+          }}
         >
           Back to Properties
         </Button>
@@ -152,18 +167,28 @@ const PropertyDetails: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2, md: 4 } }}>
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate('/properties')}
-        sx={{ mb: 2 }}
+        sx={{ 
+          mb: { xs: 2, md: 3 },
+          fontSize: { xs: '0.9rem', sm: '1rem' }
+        }}
       >
         Back to Properties
       </Button>
 
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, md: 4 }}>
         <Grid item xs={12}>
-          <Box sx={{ position: 'relative', width: '100%', aspectRatio: '16/9', bgcolor: '#f5f5f5', mb: 2 }}>
+          <Box sx={{ 
+            position: 'relative', 
+            width: '100%', 
+            aspectRatio: { xs: '4/3', sm: '16/9' }, 
+            bgcolor: '#f5f5f5', 
+            mb: { xs: 2, md: 3 },
+            borderRadius: { xs: 1, sm: 2 }
+          }}>
             <CardMedia
               component="img"
               image={property.images && property.images.length > 0 ? property.images[currentImageIndex] : '/default-placeholder.png'}
@@ -172,9 +197,9 @@ const PropertyDetails: React.FC = () => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
-                borderRadius: 2,
+                borderRadius: { xs: 1, sm: 2 },
                 background: '#f5f5f5',
-                maxHeight: 500,
+                maxHeight: { xs: 300, sm: 400, md: 500 },
               }}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
@@ -185,27 +210,29 @@ const PropertyDetails: React.FC = () => {
                   onClick={handlePrevImage}
                   sx={{
                     position: 'absolute',
-                    left: 8,
+                    left: { xs: 4, sm: 8 },
                     top: '50%',
                     transform: 'translateY(-50%)',
                     bgcolor: 'rgba(255, 255, 255, 0.8)',
-                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                    p: { xs: 0.5, sm: 1 }
                   }}
                 >
-                  <ChevronLeftIcon />
+                  <ChevronLeftIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
                 </IconButton>
                 <IconButton
                   onClick={handleNextImage}
                   sx={{
                     position: 'absolute',
-                    right: 8,
+                    right: { xs: 4, sm: 8 },
                     top: '50%',
                     transform: 'translateY(-50%)',
                     bgcolor: 'rgba(255, 255, 255, 0.8)',
-                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' },
+                    p: { xs: 0.5, sm: 1 }
                   }}
                 >
-                  <ChevronRightIcon />
+                  <ChevronRightIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }} />
                 </IconButton>
               </>
             )}
@@ -218,7 +245,7 @@ const PropertyDetails: React.FC = () => {
                   key={img}
                   sx={{
                     border: idx === currentImageIndex ? '2px solid #1976d2' : '2px solid transparent',
-                    borderRadius: 2,
+                    borderRadius: { xs: 1, sm: 2 },
                     overflow: 'hidden',
                     cursor: 'pointer',
                     transition: 'border 0.2s',
@@ -230,7 +257,12 @@ const PropertyDetails: React.FC = () => {
                     component="img"
                     image={img}
                     alt={`Gallery ${idx + 1}`}
-                    sx={{ width: '100%', height: 90, objectFit: 'cover', background: '#f5f5f5' }}
+                    sx={{ 
+                      width: '100%', 
+                      height: { xs: 60, sm: 90 }, 
+                      objectFit: 'cover', 
+                      background: '#f5f5f5' 
+                    }}
                   />
                 </Box>
               ))}
@@ -239,74 +271,206 @@ const PropertyDetails: React.FC = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <Typography variant="h3" component="h1" gutterBottom>
+          <Typography 
+            variant="h2" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.5rem' },
+              fontWeight: 700,
+              mb: { xs: 1, md: 2 }
+            }}
+          >
             {property.title}
           </Typography>
-          <Typography variant="h5" color="primary" gutterBottom>
+          <Typography 
+            variant="h4" 
+            color="primary" 
+            gutterBottom
+            sx={{ 
+              fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem' },
+              fontWeight: 600,
+              mb: { xs: 1, md: 2 }
+            }}
+          >
             ${property.price}/month
           </Typography>
-          <Typography variant="body1" paragraph>
+          <Typography 
+            variant="body1" 
+            paragraph
+            sx={{ 
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              lineHeight: 1.6,
+              mb: { xs: 2, md: 3 }
+            }}
+          >
             {property.description}
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper sx={{ 
+            p: { xs: 2, sm: 3 }, 
+            mb: { xs: 2, md: 3 },
+            borderRadius: { xs: 1, sm: 2 }
+          }}>
+            <Typography 
+              variant="h5" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                fontWeight: 600,
+                mb: { xs: 1.5, md: 2 }
+              }}
+            >
               Property Details & Features
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
               <Grid item xs={12} sm={4}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Bedrooms</Typography>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Bedrooms
+                </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <span role="img" aria-label="bed">🛏</span>
-                  <Typography>{property.numBeds ?? property.bedrooms}</Typography>
+                  <Typography sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {property.numBeds ?? property.bedrooms}
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Bathrooms</Typography>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Bathrooms
+                </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <span role="img" aria-label="bath">🛁</span>
-                  <Typography>{property.numBaths ?? property.bathrooms}</Typography>
+                  <Typography sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {property.numBaths ?? property.bathrooms}
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Sqft Area</Typography>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Sqft Area
+                </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <span role="img" aria-label="area">📐</span>
-                  <Typography>{property.sqftArea ?? property.squareFeet}</Typography>
+                  <Typography sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                    {property.sqftArea ?? property.squareFeet}
+                  </Typography>
                 </Box>
               </Grid>
               <Grid item xs={12}>
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: { xs: 1.5, md: 2 } }} />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Amenities</Typography>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Amenities
+                </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                   {property.amenities && property.amenities.length > 0 ? property.amenities.map((a, i) => (
-                    <Paper key={i} sx={{ px: 1.5, py: 0.5, borderRadius: 2, bgcolor: 'grey.100', fontSize: 14 }}>{a}</Paper>
-                  )) : <Typography color="text.secondary">No amenities listed</Typography>}
+                    <Chip 
+                      key={i} 
+                      label={a} 
+                      size="small"
+                      sx={{ 
+                        fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                        height: { xs: 24, sm: 28 }
+                      }}
+                    />
+                  )) : (
+                    <Typography 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                    >
+                      No amenities listed
+                    </Typography>
+                  )}
                 </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Landlord's Criteria</Typography>
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Landlord's Criteria
+                </Typography>
+                <Box component="ul" sx={{ 
+                  margin: 0, 
+                  paddingLeft: 2,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                }}>
                   <li>Income Qualification: {property.incomeQualification || 'N/A'}</li>
                   <li>Credit Score Eligible: {property.creditScoreEligible || 'N/A'}</li>
                   <li>Pet Policy: {property.petPolicy || 'N/A'}</li>
-                </ul>
+                </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Financials</Typography>
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Financials
+                </Typography>
+                <Box component="ul" sx={{ 
+                  margin: 0, 
+                  paddingLeft: 2,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                }}>
                   <li>Security Deposit: {property.securityDeposit || 'N/A'}</li>
                   <li>Utilities Paid By: {property.utilitiesPaidBy || 'N/A'}</li>
                   <li>HOA Paid By: {property.hoaPaidBy || 'N/A'}</li>
-                </ul>
+                </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Location</Typography>
-                <Typography>{property.location}</Typography>
+                <Typography 
+                  variant="subtitle2" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mb: 1,
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }}
+                >
+                  Location
+                </Typography>
+                <Typography sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {property.location}
+                </Typography>
               </Grid>
             </Grid>
           </Paper>
@@ -314,7 +478,7 @@ const PropertyDetails: React.FC = () => {
 
         {/* Viewing Slots Section */}
         <Grid item xs={12}>
-          <Box mt={4}>
+          <Box mt={{ xs: 2, md: 4 }}>
             {/* Dynamically import the component to avoid SSR issues if any */}
             {property.status === 'available' && (
               <React.Suspense fallback={<div>Loading viewing slots...</div>}>
@@ -332,6 +496,11 @@ const PropertyDetails: React.FC = () => {
               size="large"
               fullWidth
               onClick={() => setShowRentalApplication(true)}
+              sx={{
+                fontSize: { xs: '1rem', sm: '1.1rem' },
+                py: { xs: 1.5, sm: 2 },
+                borderRadius: { xs: 1.5, sm: 2 }
+              }}
             >
               Apply for Rental
             </Button>
@@ -344,11 +513,22 @@ const PropertyDetails: React.FC = () => {
         onClose={() => setShowRentalApplication(false)}
         maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 4 },
+            maxHeight: { xs: '90vh', sm: '80vh' }
+          }
+        }}
       >
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 1, sm: 2 } }}>
           <IconButton
             onClick={() => setShowRentalApplication(false)}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
+            sx={{ 
+              position: 'absolute', 
+              right: { xs: 4, sm: 8 }, 
+              top: { xs: 4, sm: 8 },
+              zIndex: 1
+            }}
           >
             <CloseIcon />
           </IconButton>

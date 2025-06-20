@@ -9,6 +9,8 @@ import {
   Button,
   Grid,
   Stack,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../../types/property';
@@ -25,30 +27,33 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, isRented = false }) => {
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <Card
       sx={{
-        borderRadius: 4,
-        boxShadow: 2,
-        transition: 'box-shadow 0.3s cubic-bezier(.25,.8,.25,1)',
+        borderRadius: { xs: 2, sm: 3, md: 4 },
+        boxShadow: { xs: 1, sm: 2, md: 3 },
+        transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
         '&:hover': {
-          boxShadow: 8,
+          boxShadow: { xs: 4, sm: 6, md: 8 },
           transform: 'translateY(-4px) scale(1.01)',
         },
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
-        maxWidth: 700,
-        height: 375,
+        height: { xs: 320, sm: 350, md: 375 },
         m: 'auto',
+        cursor: 'pointer',
       }}
     >
       <Box sx={{
         position: 'relative',
         width: '100%',
-        height: '50%',
+        height: { xs: '45%', sm: '50%' },
         bgcolor: '#f5f5f5'
       }}>
         <CardMedia
@@ -59,14 +64,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, isRented = false 
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            borderTopLeftRadius: 16,
-            borderTopRightRadius: 16,
+            borderTopLeftRadius: { xs: 8, sm: 12, md: 16 },
+            borderTopRightRadius: { xs: 8, sm: 12, md: 16 },
           }}
         />
         <Box sx={{
           position: 'absolute',
-          top: 12,
-          left: 12,
+          top: { xs: 8, sm: 12 },
+          left: { xs: 8, sm: 12 },
           display: 'flex',
           gap: 1,
         }}>
@@ -74,7 +79,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, isRented = false 
             label={isRented ? 'Rented' : 'Available'}
             size="small"
             color={isRented ? 'default' : 'success'}
-            sx={{ fontWeight: 'bold', fontSize: 13 }}
+            sx={{ 
+              fontWeight: 'bold', 
+              fontSize: { xs: 11, sm: 12, md: 13 },
+              height: { xs: 24, sm: 28, md: 32 }
+            }}
           />
         </Box>
       </Box>
@@ -82,50 +91,128 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, isRented = false 
         flexGrow: 1,
         display: 'flex',
         flexDirection: 'column',
-        p: 2,
-        height: '50%',
+        p: { xs: 1.5, sm: 2 },
+        height: { xs: '55%', sm: '50%' },
         overflow: 'hidden'
       }}>
-        <Typography variant="h6" fontWeight={600} gutterBottom noWrap>
+        <Typography 
+          variant="h6" 
+          fontWeight={600} 
+          gutterBottom 
+          noWrap
+          sx={{ 
+            fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+            mb: { xs: 0.5, sm: 1 }
+          }}
+        >
           {property.title}
         </Typography>
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+        <Stack 
+          direction="row" 
+          alignItems="center" 
+          spacing={1} 
+          sx={{ 
+            mb: { xs: 0.5, sm: 1 },
+            '& .MuiSvgIcon-root': {
+              fontSize: { xs: '1rem', sm: '1.1rem' }
+            }
+          }}
+        >
           <LocationOnIcon color="action" fontSize="small" />
-          <Typography variant="body2" color="text.secondary" noWrap>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            noWrap
+            sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+          >
             {property.address}
           </Typography>
         </Stack>
-        <Typography variant="subtitle1" color="primary" fontWeight={700} sx={{ mb: 0.5 }}>
+        <Typography 
+          variant="subtitle1" 
+          color="primary" 
+          fontWeight={700} 
+          sx={{ 
+            mb: { xs: 0.5, sm: 1 },
+            fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' }
+          }}
+        >
           ${property.price.toLocaleString()}/month
         </Typography>
-        <Grid container spacing={1} sx={{ mb: 0.5 }}>
+        <Grid container spacing={1} sx={{ mb: { xs: 0.5, sm: 1 } }}>
           <Grid item xs={4}>
             <Stack direction="row" alignItems="center" spacing={0.5}>
-              <BedIcon color="action" fontSize="small" />
-              <Typography variant="body2">{property.bedrooms}</Typography>
+              <BedIcon 
+                color="action" 
+                fontSize="small" 
+                sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
+              />
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                {property.bedrooms}
+              </Typography>
             </Stack>
           </Grid>
           <Grid item xs={4}>
             <Stack direction="row" alignItems="center" spacing={0.5}>
-              <BathtubIcon color="action" fontSize="small" />
-              <Typography variant="body2">{property.bathrooms}</Typography>
+              <BathtubIcon 
+                color="action" 
+                fontSize="small"
+                sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
+              />
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                {property.bathrooms}
+              </Typography>
             </Stack>
           </Grid>
           <Grid item xs={4}>
             <Stack direction="row" alignItems="center" spacing={0.5}>
-              <SquareFootIcon color="action" fontSize="small" />
-              <Typography variant="body2">{property.squareFeet}</Typography>
+              <SquareFootIcon 
+                color="action" 
+                fontSize="small"
+                sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}
+              />
+              <Typography 
+                variant="body2"
+                sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+              >
+                {property.squareFeet}
+              </Typography>
             </Stack>
           </Grid>
         </Grid>
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ mb: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+          sx={{ 
+            mb: { xs: 0.5, sm: 1 }, 
+            display: '-webkit-box', 
+            WebkitLineClamp: 2, 
+            WebkitBoxOrient: 'vertical', 
+            overflow: 'hidden',
+            fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' },
+            lineHeight: 1.4
+          }}
         >
           {property.description}
         </Typography>
-        <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
+        <Stack 
+          direction="row" 
+          spacing={1} 
+          sx={{ 
+            mb: { xs: 0.5, sm: 1 }, 
+            flexWrap: 'wrap',
+            '& .MuiChip-root': {
+              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+              height: { xs: 20, sm: 24 }
+            }
+          }}
+        >
           {property.amenities.slice(0, 1).map((amenity, idx) => (
             <Chip key={idx} label={amenity} size="small" variant="outlined" />
           ))}
@@ -138,7 +225,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, isRented = false 
           color="primary"
           fullWidth
           size="medium"
-          sx={{ mt: 'auto', borderRadius: 2, fontWeight: 600 }}
+          sx={{ 
+            mt: 'auto', 
+            borderRadius: { xs: 1.5, sm: 2 }, 
+            fontWeight: 600,
+            fontSize: { xs: '0.8rem', sm: '0.875rem' },
+            py: { xs: 1, sm: 1.5 },
+            textTransform: 'none'
+          }}
           onClick={() => navigate(`/property/${property.id}`)}
         >
           View Details

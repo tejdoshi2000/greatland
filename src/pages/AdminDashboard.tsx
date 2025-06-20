@@ -21,6 +21,12 @@ import {
   Alert,
   Tabs,
   Tab,
+  useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  Stack,
+  Chip,
 } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import AdminViewingSlots from '../components/Admin/AdminViewingSlots';
@@ -38,6 +44,10 @@ interface Property {
 }
 
 const AdminDashboard: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [activeTab, setActiveTab] = useState(0);
   const [properties, setProperties] = useState<Property[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -199,8 +209,10 @@ const AdminDashboard: React.FC = () => {
         ? (process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/properties/${selectedProperty._id}`
         : (process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/properties';
 
+      const method = selectedProperty ? 'PUT' : 'POST';
+
       const response = await fetch(url, {
-        method: selectedProperty ? 'PUT' : 'POST',
+        method,
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
@@ -211,8 +223,8 @@ const AdminDashboard: React.FC = () => {
         throw new Error('Failed to save property');
       }
 
+      await fetchProperties();
       handleCloseDialog();
-      fetchProperties();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save property');
     }
@@ -235,7 +247,7 @@ const AdminDashboard: React.FC = () => {
         throw new Error('Failed to delete property');
       }
 
-      fetchProperties();
+      await fetchProperties();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete property');
     }
@@ -269,21 +281,11 @@ const AdminDashboard: React.FC = () => {
               images: Array.from(target.files)
             });
           }
-        } catch (error) {
-          console.error('Error handling file selection:', error);
+        } catch (err) {
+          console.error('Error handling file selection:', err);
           alert('Error selecting files. Please try again.');
         } finally {
           // Clean up
-          if (document.body.contains(tempInput)) {
-            document.body.removeChild(tempInput);
-          }
-        }
-      });
-      
-      // Add error handling for the click
-      tempInput.addEventListener('error', (e) => {
-        console.error('File input error:', e);
-        if (document.body.contains(tempInput)) {
           document.body.removeChild(tempInput);
         }
       });
@@ -291,48 +293,11 @@ const AdminDashboard: React.FC = () => {
       // Add to DOM and trigger click
       document.body.appendChild(tempInput);
       console.log('Triggering click on temporary input');
+      tempInput.click();
       
-      // Use setTimeout to ensure DOM is ready
-      setTimeout(() => {
-        try {
-          tempInput.click();
-        } catch (error) {
-          console.error('Error triggering file input click:', error);
-          // Fallback: try to remove the input if click fails
-          if (document.body.contains(tempInput)) {
-            document.body.removeChild(tempInput);
-          }
-        }
-      }, 0);
-      
-    } catch (error) {
-      console.error('Error creating file input:', error);
-      // Fallback: try using a simple approach
-      try {
-        const fallbackInput = document.createElement('input');
-        fallbackInput.type = 'file';
-        fallbackInput.accept = 'image/*';
-        fallbackInput.multiple = true;
-        fallbackInput.style.position = 'absolute';
-        fallbackInput.style.left = '-9999px';
-        fallbackInput.onchange = (e) => {
-          const target = e.target as HTMLInputElement;
-          if (target && target.files) {
-            setFormData({
-              ...formData,
-              images: Array.from(target.files)
-            });
-          }
-          if (document.body.contains(fallbackInput)) {
-            document.body.removeChild(fallbackInput);
-          }
-        };
-        document.body.appendChild(fallbackInput);
-        fallbackInput.click();
-      } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
-        alert('Unable to open file dialog. Please refresh the page and try again.');
-      }
+    } catch (err) {
+      console.error('Error creating file input:', err);
+      alert('Error creating file upload. Please try again.');
     }
   };
 
@@ -341,12 +306,31 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2, md: 4 } }}>
+      <Box sx={{ mb: { xs: 3, md: 4 } }}>
+        <Typography 
+          variant="h3" 
+          component="h1" 
+          gutterBottom
+          sx={{ 
+            fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+            fontWeight: 700,
+            color: theme.palette.primary.main,
+            mb: { xs: 1, md: 2 }
+          }}
+        >
           Admin Dashboard
         </Typography>
-        <Tabs value={activeTab} onChange={handleTabChange}>
+        <Tabs 
+          value={activeTab} 
+          onChange={handleTabChange}
+          sx={{
+            '& .MuiTab-root': {
+              fontSize: { xs: '0.9rem', sm: '1rem' },
+              minHeight: { xs: 48, sm: 56 }
+            }
+          }}
+        >
           <Tab label="Properties" />
           <Tab label="Rental Applications" />
         </Tabs>
@@ -360,60 +344,195 @@ const AdminDashboard: React.FC = () => {
 
       {activeTab === 0 && (
         <>
-          <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h5" component="h2">
+          <Box sx={{ 
+            mb: { xs: 3, md: 4 }, 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            justifyContent: 'space-between', 
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: { xs: 2, sm: 0 }
+          }}>
+            <Typography 
+              variant="h4" 
+              component="h2"
+              sx={{ 
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+                fontWeight: 600
+              }}
+            >
               Property Management
             </Typography>
             <Button
               variant="contained"
               color="primary"
               onClick={() => handleOpenDialog()}
+              sx={{
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                px: { xs: 2, sm: 3 },
+                py: { xs: 1, sm: 1.5 }
+              }}
             >
               Add New Property
             </Button>
           </Box>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Location</TableCell>
-                  <TableCell>Price</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {properties.map((property) => (
-                  <TableRow key={property._id}>
-                    <TableCell>{property.title}</TableCell>
-                    <TableCell>{property.location}</TableCell>
-                    <TableCell>${property.price}/month</TableCell>
-                    <TableCell>{property.status}</TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => handleOpenDialog(property)}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => handleDelete(property._id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={() => {
-                          setSlotsPropertyId(property._id);
-                          setOpenSlotsDialog(true);
+          
+          {isMobile ? (
+            // Mobile card view
+            <Grid container spacing={2}>
+              {properties.map((property) => (
+                <Grid item xs={12} sm={6} key={property._id}>
+                  <Card sx={{ p: 2 }}>
+                    <CardContent sx={{ p: { xs: 1, sm: 2 } }}>
+                      <Typography 
+                        variant="h6" 
+                        sx={{ 
+                          fontSize: { xs: '1rem', sm: '1.1rem' },
+                          fontWeight: 600,
+                          mb: 1
                         }}
-                        sx={{ ml: 1 }}
                       >
-                        Manage Slots
-                      </Button>
+                        {property.title}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ mb: 1, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}
+                      >
+                        {property.location}
+                      </Typography>
+                      <Typography 
+                        variant="body1" 
+                        color="primary"
+                        sx={{ 
+                          fontWeight: 600,
+                          fontSize: { xs: '0.9rem', sm: '1rem' },
+                          mb: 1
+                        }}
+                      >
+                        ${property.price}/month
+                      </Typography>
+                      <Chip 
+                        label={property.status} 
+                        color={property.status === 'available' ? 'success' : 'default'}
+                        size="small"
+                        sx={{ mb: 2 }}
+                      />
+                      <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<EditIcon />}
+                          onClick={() => handleOpenDialog(property)}
+                          sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          onClick={() => handleDelete(property._id)}
+                          sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
+                        >
+                          Delete
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => {
+                            setSlotsPropertyId(property._id);
+                            setOpenSlotsDialog(true);
+                          }}
+                          sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}
+                        >
+                          Slots
+                        </Button>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            // Desktop table view
+            <TableContainer component={Paper} sx={{ boxShadow: { xs: 1, sm: 2 } }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      Title
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      Location
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      Price
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      Status
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                      Actions
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {properties.map((property) => (
+                    <TableRow key={property._id}>
+                      <TableCell sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                        {property.title}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                        {property.location}
+                      </TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                        ${property.price}/month
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={property.status} 
+                          color={property.status === 'available' ? 'success' : 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+                          <IconButton 
+                            onClick={() => handleOpenDialog(property)}
+                            size="small"
+                          >
+                            <EditIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
+                          </IconButton>
+                          <IconButton 
+                            onClick={() => handleDelete(property._id)}
+                            size="small"
+                            color="error"
+                          >
+                            <DeleteIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }} />
+                          </IconButton>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => {
+                              setSlotsPropertyId(property._id);
+                              setOpenSlotsDialog(true);
+                            }}
+                            sx={{ 
+                              fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                              px: { xs: 1, sm: 1.5 }
+                            }}
+                          >
+                            Manage Slots
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
         </>
       )}
 
@@ -421,13 +540,27 @@ const AdminDashboard: React.FC = () => {
         <RentalApplications />
       )}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>
+      <Dialog 
+        open={openDialog} 
+        onClose={handleCloseDialog} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 4 },
+            maxHeight: { xs: '90vh', sm: '80vh' }
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+          fontWeight: 600
+        }}>
           {selectedProperty ? 'Edit Property' : 'Add New Property'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -435,6 +568,7 @@ const AdminDashboard: React.FC = () => {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -442,11 +576,12 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   required
                   multiline
-                  rows={4}
+                  rows={isSmallMobile ? 3 : 4}
                   label="Description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Enter a detailed description of the property..."
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -457,6 +592,7 @@ const AdminDashboard: React.FC = () => {
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   required
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -466,6 +602,7 @@ const AdminDashboard: React.FC = () => {
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   required
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -476,6 +613,7 @@ const AdminDashboard: React.FC = () => {
                   value={formData.bedrooms}
                   onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
                   required
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -486,6 +624,7 @@ const AdminDashboard: React.FC = () => {
                   value={formData.bathrooms}
                   onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
                   required
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
@@ -496,10 +635,21 @@ const AdminDashboard: React.FC = () => {
                   value={formData.squareFeet}
                   onChange={(e) => setFormData({ ...formData, squareFeet: e.target.value })}
                   required
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, mt: 2, mb: 1 }}>Facts & Features</Typography>
+                <Typography 
+                  variant="subtitle1" 
+                  sx={{ 
+                    fontWeight: 600, 
+                    mt: 2, 
+                    mb: 1,
+                    fontSize: { xs: '1rem', sm: '1.1rem' }
+                  }}
+                >
+                  Facts & Features
+                </Typography>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -507,6 +657,7 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   value={formData.incomeQualification}
                   onChange={e => setFormData({ ...formData, incomeQualification: e.target.value })}
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -515,6 +666,7 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   value={formData.creditScoreEligible}
                   onChange={e => setFormData({ ...formData, creditScoreEligible: e.target.value })}
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -523,6 +675,7 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   value={formData.petPolicy}
                   onChange={e => setFormData({ ...formData, petPolicy: e.target.value })}
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -531,6 +684,7 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   value={formData.securityDeposit}
                   onChange={e => setFormData({ ...formData, securityDeposit: e.target.value })}
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -539,6 +693,7 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   value={formData.utilitiesPaidBy}
                   onChange={e => setFormData({ ...formData, utilitiesPaidBy: e.target.value })}
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -547,25 +702,46 @@ const AdminDashboard: React.FC = () => {
                   fullWidth
                   value={formData.hoaPaidBy}
                   onChange={e => setFormData({ ...formData, hoaPaidBy: e.target.value })}
+                  size={isSmallMobile ? "small" : "medium"}
                 />
               </Grid>
               <Grid item xs={12}>
                 <Button 
                   variant="contained" 
                   onClick={handleUploadButtonClick}
+                  sx={{
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
+                    py: { xs: 1, sm: 1.5 }
+                  }}
                 >
                   Upload Images
                 </Button>
                 {formData.images.length > 0 && (
-                  <Typography variant="body2" sx={{ mt: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      mt: 1,
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                    }}
+                  >
                     {formData.images.length} image(s) selected
                   </Typography>
                 )}
               </Grid>
             </Grid>
-            <DialogActions>
-              <Button onClick={handleCloseDialog}>Cancel</Button>
-              <Button type="submit" variant="contained" color="primary">
+            <DialogActions sx={{ mt: 3, px: 0 }}>
+              <Button 
+                onClick={handleCloseDialog}
+                sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                variant="contained" 
+                color="primary"
+                sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+              >
                 {selectedProperty ? 'Update' : 'Add'}
               </Button>
             </DialogActions>
@@ -574,13 +750,34 @@ const AdminDashboard: React.FC = () => {
       </Dialog>
 
       {/* Viewing Slots Dialog */}
-      <Dialog open={openSlotsDialog} onClose={() => setOpenSlotsDialog(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Manage Viewing Slots</DialogTitle>
-        <DialogContent>
+      <Dialog 
+        open={openSlotsDialog} 
+        onClose={() => setOpenSlotsDialog(false)} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 4 },
+            maxHeight: { xs: '90vh', sm: '80vh' }
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+          fontWeight: 600
+        }}>
+          Manage Viewing Slots
+        </DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
           {slotsPropertyId && <AdminViewingSlots propertyId={slotsPropertyId} />}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSlotsDialog(false)}>Close</Button>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 } }}>
+          <Button 
+            onClick={() => setOpenSlotsDialog(false)}
+            sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}
+          >
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
