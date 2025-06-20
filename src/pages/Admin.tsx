@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Typography,
@@ -19,8 +19,6 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { styled } from '@mui/material/styles';
-
 
 console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
@@ -101,12 +99,12 @@ const Admin: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const [uploadError, setUploadError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [uploadedImages, setUploadedImages] = useState<number>(0);
   const [totalImages, setTotalImages] = useState<number>(0);
   const [showUploadingMsg, setShowUploadingMsg] = useState(false);
   const [showTooManyImages, setShowTooManyImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProperties();
@@ -126,6 +124,7 @@ const Admin: React.FC = () => {
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('File input onChange triggered. Files:', e.target.files);
     const files = e.target.files;
     if (!files) return;
     if (files.length > MAX_IMAGES) {
@@ -135,6 +134,18 @@ const Admin: React.FC = () => {
     } else {
       setSelectedFiles(Array.from(files));
       setTotalImages(files.length);
+    }
+  };
+
+  const handleUploadButtonClick = () => {
+    console.log('Upload button clicked. isUploading:', isUploading, 'isSubmitting:', isSubmitting);
+    if (!isUploading && !isSubmitting) {
+      if (fileInputRef.current) {
+        console.log('fileInputRef is set. Triggering click.');
+        fileInputRef.current.click();
+      } else {
+        console.log('fileInputRef is NOT set!');
+      }
     }
   };
 
@@ -506,24 +517,22 @@ const Admin: React.FC = () => {
           </Grid>
           <Grid item xs={12}>
             <input
+              ref={fileInputRef}
               accept="image/*"
-              style={{ display: 'none' }}
-              id="image-upload"
+              style={{ display: 'block' }}
               type="file"
               multiple
               onChange={handleImageSelect}
               disabled={isUploading || isSubmitting}
             />
-            <label htmlFor="image-upload">
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<CloudUploadIcon />}
-                disabled={isUploading || isSubmitting}
-              >
-                {isUploading ? 'Uploading...' : 'Upload Images'}
-              </Button>
-            </label>
+            <Button
+              variant="outlined"
+              onClick={handleUploadButtonClick}
+              startIcon={<CloudUploadIcon />}
+              disabled={isUploading || isSubmitting}
+            >
+              {isUploading ? 'Uploading...' : 'Upload Images'}
+            </Button>
             {selectedFiles.length > 0 && (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                 {selectedFiles.length} image(s) selected
@@ -536,11 +545,6 @@ const Admin: React.FC = () => {
                   Uploading property and images... {uploadedImages} of {totalImages} ({Math.round(uploadProgress)}%)
                 </Typography>
               </Box>
-            )}
-            {uploadError && (
-              <Alert severity="error" sx={{ mt: 2 }}>
-                {uploadError}
-              </Alert>
             )}
             <Snackbar
               open={showTooManyImages}

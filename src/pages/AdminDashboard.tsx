@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -45,7 +45,6 @@ const AdminDashboard: React.FC = () => {
   const [error, setError] = useState('');
   const [openSlotsDialog, setOpenSlotsDialog] = useState(false);
   const [slotsPropertyId, setSlotsPropertyId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -72,6 +71,35 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     fetchProperties();
   }, []);
+
+  // Reset form data when dialog opens/closes
+  useEffect(() => {
+    if (!openDialog) {
+      // Reset form when dialog closes
+      setFormData({
+        title: '',
+        price: '',
+        location: '',
+        bedrooms: '',
+        bathrooms: '',
+        squareFeet: '',
+        description: '',
+        features: '',
+        amenities: '',
+        images: [],
+        numBeds: '',
+        numBaths: '',
+        sqftArea: '',
+        incomeQualification: '',
+        creditScoreEligible: '',
+        petPolicy: '',
+        securityDeposit: '',
+        utilitiesPaidBy: '',
+        hoaPaidBy: '',
+      });
+      setSelectedProperty(null);
+    }
+  }, [openDialog]);
 
   const fetchProperties = async () => {
     try {
@@ -213,12 +241,98 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFormData({
-        ...formData,
-        images: Array.from(e.target.files)
+  const handleUploadButtonClick = () => {
+    console.log('Upload button clicked in AdminDashboard');
+    
+    // Check browser compatibility
+    if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
+      alert('Your browser does not support file uploads. Please use a modern browser like Chrome, Firefox, or Edge.');
+      return;
+    }
+    
+    try {
+      // Create a temporary file input element
+      const tempInput = document.createElement('input');
+      tempInput.type = 'file';
+      tempInput.accept = 'image/*';
+      tempInput.multiple = true;
+      tempInput.style.display = 'none';
+      
+      // Add event listener with error handling
+      tempInput.addEventListener('change', (e) => {
+        try {
+          const target = e.target as HTMLInputElement;
+          console.log('Temporary file input onChange triggered. Files:', target?.files);
+          if (target && target.files) {
+            setFormData({
+              ...formData,
+              images: Array.from(target.files)
+            });
+          }
+        } catch (error) {
+          console.error('Error handling file selection:', error);
+          alert('Error selecting files. Please try again.');
+        } finally {
+          // Clean up
+          if (document.body.contains(tempInput)) {
+            document.body.removeChild(tempInput);
+          }
+        }
       });
+      
+      // Add error handling for the click
+      tempInput.addEventListener('error', (e) => {
+        console.error('File input error:', e);
+        if (document.body.contains(tempInput)) {
+          document.body.removeChild(tempInput);
+        }
+      });
+      
+      // Add to DOM and trigger click
+      document.body.appendChild(tempInput);
+      console.log('Triggering click on temporary input');
+      
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        try {
+          tempInput.click();
+        } catch (error) {
+          console.error('Error triggering file input click:', error);
+          // Fallback: try to remove the input if click fails
+          if (document.body.contains(tempInput)) {
+            document.body.removeChild(tempInput);
+          }
+        }
+      }, 0);
+      
+    } catch (error) {
+      console.error('Error creating file input:', error);
+      // Fallback: try using a simple approach
+      try {
+        const fallbackInput = document.createElement('input');
+        fallbackInput.type = 'file';
+        fallbackInput.accept = 'image/*';
+        fallbackInput.multiple = true;
+        fallbackInput.style.position = 'absolute';
+        fallbackInput.style.left = '-9999px';
+        fallbackInput.onchange = (e) => {
+          const target = e.target as HTMLInputElement;
+          if (target && target.files) {
+            setFormData({
+              ...formData,
+              images: Array.from(target.files)
+            });
+          }
+          if (document.body.contains(fallbackInput)) {
+            document.body.removeChild(fallbackInput);
+          }
+        };
+        document.body.appendChild(fallbackInput);
+        fallbackInput.click();
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        alert('Unable to open file dialog. Please refresh the page and try again.');
+      }
     }
   };
 
@@ -436,19 +550,12 @@ const AdminDashboard: React.FC = () => {
                 />
               </Grid>
               <Grid item xs={12}>
-                <input
-                  accept="image/*"
-                  style={{ display: 'none' }}
-                  id="raised-button-file"
-                  multiple
-                  type="file"
-                  onChange={handleImageChange}
-                />
-                <label htmlFor="raised-button-file">
-                  <Button variant="contained" component="span">
-                    Upload Images
-                  </Button>
-                </label>
+                <Button 
+                  variant="contained" 
+                  onClick={handleUploadButtonClick}
+                >
+                  Upload Images
+                </Button>
                 {formData.images.length > 0 && (
                   <Typography variant="body2" sx={{ mt: 1 }}>
                     {formData.images.length} image(s) selected
