@@ -198,7 +198,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
     const loadPdfTemplate = async () => {
       try {
         // Use the new ApplicationRevised template
-        const apiUrl = (window as any).REACT_APP_API_URL || 'http://localhost:5000';
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
         const response = await fetch(`${apiUrl}/static/ApplicationRevised.pdf`);
         if (!response.ok) {
           throw new Error('Failed to load PDF template');
@@ -272,7 +272,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
 
       console.log('Sending application to backend...');
       // Save the application to the backend
-      const apiUrl = (window as any).REACT_APP_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       const response = await fetch(`${apiUrl}/api/rental-applications`, {
         method: 'POST',
         headers: {
