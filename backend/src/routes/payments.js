@@ -1,12 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const auth = require('../middleware/auth');
 const RentalApplication = require('../models/RentalApplication');
+
+// Initialize Stripe only if the secret key is available
+let stripe = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+} else {
+  console.warn('Stripe secret key not found. Payment functionality will be disabled.');
+}
 
 // Create payment intent
 router.post('/create-payment-intent', async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(503).json({ message: 'Payment service not configured' });
+    }
+
     const { applicationId, amount } = req.body;
 
     // Verify application exists
@@ -39,6 +50,10 @@ router.post('/create-payment-intent', async (req, res) => {
 // Handle successful payment
 router.post('/confirm-payment', async (req, res) => {
   try {
+    if (!stripe) {
+      return res.status(503).json({ message: 'Payment service not configured' });
+    }
+
     const { applicationId, paymentIntentId } = req.body;
 
     // Verify application exists
@@ -104,6 +119,10 @@ router.post('/confirm-payment', async (req, res) => {
 
 // Webhook to handle Stripe events
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return res.status(503).json({ message: 'Webhook service not configured' });
+  }
+
   const sig = req.headers['stripe-signature'];
   let event;
 

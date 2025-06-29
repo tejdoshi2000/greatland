@@ -41,9 +41,9 @@ export const fillFormFields = (form: PDFFormWithFields, formData: RentalApplicat
         }
         // Rental History
         else if (fieldName === 'Eviction No') {
-          form.getCheckBox(fieldName).check(formData.hasEviction === false);
+          form.getCheckBox(fieldName).check(formData.hasEviction === 'no');
         } else if (fieldName === 'Bankruptcy No') {
-          form.getCheckBox(fieldName).check(formData.hasBankruptcy === false);
+          form.getCheckBox(fieldName).check(formData.hasBankruptcy === 'no');
         }
         // Applicant 2 Employment (set to blank)
         else if (
@@ -289,12 +289,12 @@ export const fillFormFields = (form: PDFFormWithFields, formData: RentalApplicat
       } else if (fieldName === 'Check Box8') {
         const checkBox = form.getCheckBox(fieldName) as PDFCheckBox;
         if (checkBox) {
-          checkBox.check(formData.hasEviction);
+          checkBox.check(formData.hasEviction === 'yes');
         }
       } else if (fieldName === 'Check Box9') {
         const checkBox = form.getCheckBox(fieldName) as PDFCheckBox;
         if (checkBox) {
-          checkBox.check(formData.hasBankruptcy);
+          checkBox.check(formData.hasBankruptcy === 'yes');
         }
       } else if (fieldName === 'Previous Address') {
         const textField = form.getTextField(fieldName);

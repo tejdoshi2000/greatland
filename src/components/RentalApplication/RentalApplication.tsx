@@ -17,7 +17,8 @@ import {
 } from '@mui/material';
 import { PDFDocument } from 'pdf-lib';
 import { useNavigate } from 'react-router-dom';
-import { fillFormFields } from './formFilling';
+import { fillFormFieldsRevised } from './formFillingRevised';
+import { analyzePdfFields } from './analyzePdfFields';
 import { PDFFormWithFields, RentalApplicationFormData } from './types';
 
 interface RentalApplicationProps {
@@ -52,97 +53,77 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
     depositAmount: propertyPrice.toString(),
 
     // Applicant One Information
-    applicantOneName: '',
-    applicantOneDOB: '',
-    applicantOneSSN: '',
-    applicantOneDriversLic: '',
-    applicantOneState: '',
-    applicantOnePhone: '',
-    applicantOneCell: '',
-    applicantOneEmail: '',
-
-    // Applicant Two Information
-    applicantTwoName: 'John Doe',
-    applicantTwoDOB: '1988-08-22',
-    applicantTwoSSN: '987-65-4321',
-    applicantTwoDriversLic: 'D87654321',
-    applicantTwoState: 'CA',
-    applicantTwoPhone: '(916) 555-4321',
-    applicantTwoCell: '(916) 555-4322',
-    applicantTwoEmail: 'john.doe@email.com',
+    applicantOneName: 'John Doe',
+    applicantOneDOB: '1990-05-15',
+    applicantOneSSN: '123-45-6789',
+    applicantOneDriversLic: 'D123456789',
+    applicantOneState: 'CA',
+    applicantOnePhone: '(916) 555-0101',
+    applicantOneCell: '(916) 555-0102',
+    applicantOneEmail: 'john.doe@email.com',
 
     // Additional Occupants
     additionalOccupants: 'None',
 
     // Rental History
-    hasEviction: false,
-    hasBankruptcy: false,
+    hasEviction: 'no',
+    hasBankruptcy: 'no',
 
     // Present Address
-    presentAddress: '',
-    presentCity: '',
-    presentZip: '',
-    presentLengthOfResidency: '',
-    presentMonthlyRent: '',
-    presentLandlordAgent: '',
-    presentLandlordDRE: '',
-    presentLandlordAddress: '',
-    presentLandlordPhone: '',
-    presentLandlordCell: '',
-    presentLandlordEmail: '',
-    reasonForMoving: '',
-    movingDate: '',
+    presentAddress: '123 Main Street',
+    presentCity: 'Sacramento',
+    presentZip: '95814',
+    presentLengthOfResidency: '2 years',
+    presentMonthlyRent: '1800',
+    presentLandlordAgent: 'ABC Property Management',
+    presentLandlordDRE: '1234567',
+    presentLandlordAddress: '456 Oak Avenue, Sacramento, CA 95814',
+    presentLandlordPhone: '(916) 555-0301',
+    presentLandlordCell: '(916) 555-0302',
+    presentLandlordEmail: 'landlord@abcpm.com',
+    reasonForMoving: 'Looking for larger space',
+    movingDate: '2024-06-01',
 
     // Previous Address
-    previousAddress: '4321 Elm St',
-    previousCity: 'Sacramento',
-    previousZip: '95815',
-    previousLengthOfResidency: '3 years',
-    previousMonthlyRent: '2000',
-    previousLandlordAgent: 'Michael Brown',
-    previousLandlordDRE: '76543210',
-    previousLandlordAddress: '8765 Pine St, Sacramento, CA 95815',
-    previousLandlordPhone: '(916) 555-2222',
-    previousLandlordCell: '(916) 555-2223',
-    previousLandlordEmail: 'michael.brown@pm.com',
+    previousAddress: '789 Pine Street',
+    previousCity: 'Davis',
+    previousZip: '95616',
+    previousLengthOfResidency: '1 year',
+    previousMonthlyRent: '1600',
+    previousLandlordAgent: 'XYZ Rentals',
+    previousLandlordDRE: '7654321',
+    previousLandlordAddress: '321 Elm Street, Davis, CA 95616',
+    previousLandlordPhone: '(530) 555-0401',
+    previousLandlordCell: '(530) 555-0402',
+    previousLandlordEmail: 'landlord@xyzrentals.com',
 
     // Employment Information
-    employerOne: '',
-    employerOneAddress: '',
-    employerOnePhone: '',
-    employerOneCell: '',
-    employerOneEmail: '',
-    employerOneLengthOfEmployment: '',
-    employerOnePosition: '',
-    employerOneWages: '',
-    employerOnePayPeriod: '',
-    employerOneUnion: '',
+    employerOne: 'Tech Solutions Inc',
+    employerOneAddress: '1000 Innovation Drive, Sacramento, CA 95814',
+    employerOnePhone: '(916) 555-0501',
+    employerOneCell: '(916) 555-0502',
+    employerOneEmail: 'hr@techsolutions.com',
+    employerOneLengthOfEmployment: '3 years',
+    employerOnePosition: 'Software Engineer',
+    employerOneWages: '7500',
+    employerOnePayPeriod: 'Monthly',
+    employerOneUnion: 'No',
 
-    previousEmployerOne: 'Digital Innovations',
-    previousEmployerOneAddress: '3456 Innovation Way, Sacramento, CA 95817',
-    previousEmployerOnePhone: '(916) 555-4444',
-    previousEmployerOneCell: '(916) 555-4445',
-    previousEmployerOneEmail: 'hr@digitalinnovations.com',
-    previousEmployerOneLengthOfEmployment: '3 years',
-    previousEmployerOnePosition: 'Software Engineer',
-    previousEmployerOneWages: '90000',
+    // Previous Employment
+    previousEmployerOne: 'Startup Company',
+    previousEmployerOneAddress: '500 Startup Lane, Sacramento, CA 95814',
+    previousEmployerOnePhone: '(916) 555-0601',
+    previousEmployerOneCell: '(916) 555-0602',
+    previousEmployerOneEmail: 'hr@startup.com',
+    previousEmployerOneLengthOfEmployment: '2 years',
+    previousEmployerOnePosition: 'Junior Developer',
+    previousEmployerOneWages: '5000',
     previousEmployerOnePayPeriod: 'Monthly',
     previousEmployerOneUnion: 'No',
 
-    employerTwo: 'Global Marketing',
-    employerTwoAddress: '2345 Market St, Sacramento, CA 95818',
-    employerTwoPhone: '(916) 555-5555',
-    employerTwoCell: '(916) 555-5556',
-    employerTwoEmail: 'hr@globalmarketing.com',
-    employerTwoLengthOfEmployment: '4 years',
-    employerTwoPosition: 'Marketing Manager',
-    employerTwoWages: '95000',
-    employerTwoPayPeriod: 'Monthly',
-    employerTwoUnion: 'No',
-
     // Additional Income
-    additionalIncomeAmount: '5000',
-    additionalIncomeSource: 'Freelance Design Work',
+    additionalIncomeAmount: '500',
+    additionalIncomeSource: 'Freelance Design',
     additionalIncomeRecipient: 'Jane Doe',
 
     // Automobiles
@@ -150,58 +131,53 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
     autoOneYear: '2020',
     autoOneModel: 'Camry',
     autoOneLicState: 'CA',
-    autoOneLender: 'Bank of America',
-
+    autoOneLender: 'Toyota Financial',
     autoTwoMake: 'Honda',
     autoTwoYear: '2019',
-    autoTwoModel: 'CR-V',
+    autoTwoModel: 'Civic',
     autoTwoLicState: 'CA',
-    autoTwoLender: 'Chase Bank',
+    autoTwoLender: 'Honda Financial',
 
-    // Banking Information
-    bankOneBranch: 'Bank of America - Downtown',
+    // Bank Accounts
+    bankOneBranch: 'Wells Fargo - Downtown',
     bankOneChecking: '1234567890',
     bankOneSavings: '0987654321',
-
-    bankTwoBranch: 'Chase Bank - Midtown',
-    bankTwoChecking: '2345678901',
-    bankTwoSavings: '1098765432',
+    bankTwoBranch: 'Bank of America - Midtown',
+    bankTwoChecking: '1122334455',
+    bankTwoSavings: '5544332211',
 
     // Credit References
     creditRefOneName: 'Capital One',
-    creditRefOneAddress: 'PO Box 85000, Richmond, VA 23285',
-    creditRefOneAccountNum: '1234-5678-9012-3456',
-    creditRefOneBalance: '5000',
+    creditRefOneAddress: 'PO Box 30285, Salt Lake City, UT 84130',
+    creditRefOneAccountNum: '1234567890123456',
+    creditRefOneBalance: '2500',
     creditRefOnePhone: '(800) 955-7070',
+    creditRefTwoName: 'Chase Bank',
+    creditRefTwoAddress: 'PO Box 15298, Wilmington, DE 19850',
+    creditRefTwoAccountNum: '9876543210987654',
+    creditRefTwoBalance: '1800',
+    creditRefTwoPhone: '(800) 935-9935',
 
-    creditRefTwoName: 'American Express',
-    creditRefTwoAddress: 'PO Box 981537, El Paso, TX 79998',
-    creditRefTwoAccountNum: '9876-5432-1098-7654',
-    creditRefTwoBalance: '3000',
-    creditRefTwoPhone: '(800) 528-4800',
+    // Personal References
+    personalRefName: 'Mike Johnson',
+    personalRefAddress: '555 Friend Street, Sacramento, CA 95814',
+    personalRefPhone: '(916) 555-0801',
+    personalRefCell: '(916) 555-0802',
+    personalRefEmail: 'mike.johnson@email.com',
 
-    // Personal Reference
-    personalRefName: '',
-    personalRefAddress: '',
-    personalRefPhone: '',
-    personalRefCell: '',
-    personalRefEmail: '',
-
-    // Nearest Relative
-    nearestRelativeName: '',
-    nearestRelativeRelation: '',
-    nearestRelativeAddress: '',
-    nearestRelativePhone: '',
-    nearestRelativeCell: '',
-    nearestRelativeEmail: '',
-
-    // Emergency Contact
-    emergencyContactName: '',
-    emergencyContactRelation: '',
-    emergencyContactAddress: '',
-    emergencyContactPhone: '',
-    emergencyContactCell: '',
-    emergencyContactEmail: '',
+    // Emergency Contacts
+    nearestRelativeName: 'Sarah Doe',
+    nearestRelativeRelation: 'Sister',
+    nearestRelativeAddress: '777 Family Lane, Sacramento, CA 95814',
+    nearestRelativePhone: '(916) 555-0901',
+    nearestRelativeCell: '(916) 555-0902',
+    nearestRelativeEmail: 'sarah.doe@email.com',
+    emergencyContactName: 'Bob Wilson',
+    emergencyContactRelation: 'Friend',
+    emergencyContactAddress: '888 Emergency Ave, Sacramento, CA 95814',
+    emergencyContactPhone: '(916) 555-1001',
+    emergencyContactCell: '(916) 555-1002',
+    emergencyContactEmail: 'bob.wilson@email.com',
 
     // Signatures and Dates
     signatureDate: new Date().toISOString().split('T')[0],
@@ -210,38 +186,34 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
-  const navigate = useNavigate();
-  const [successMessage, setSuccessMessage] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [showError, setShowError] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [applicationGenerated, setApplicationGenerated] = useState(false);
+  const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
 
+  // Load PDF template on component mount
   useEffect(() => {
-    // Load the PDF template
     const loadPdfTemplate = async () => {
       try {
-        console.log('Attempting to load PDF template...');
-        // Encode the filename properly
-        const filename = encodeURIComponent('RPI 553, Application to Rent (1).pdf');
-        const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/static/${filename}`);
-        
+        // Use the new ApplicationRevised template
+        const apiUrl = (window as any).REACT_APP_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${apiUrl}/static/ApplicationRevised.pdf`);
         if (!response.ok) {
-          console.error('Failed to load PDF:', {
-            status: response.status,
-            statusText: response.statusText,
-            url: response.url
-          });
-          throw new Error(`Failed to load PDF template: ${response.status} ${response.statusText}`);
+          throw new Error('Failed to load PDF template');
         }
-        
         const arrayBuffer = await response.arrayBuffer();
-        setPdfBytes(new Uint8Array(arrayBuffer));
-        console.log('PDF template loaded successfully');
+        const pdfBytes = new Uint8Array(arrayBuffer);
+        setPdfBytes(pdfBytes);
+        
+        // Analyze the PDF fields to see what's actually available
+        console.log('Analyzing PDF template fields...');
+        await analyzePdfFields(pdfBytes);
+        
       } catch (error) {
         console.error('Error loading PDF template:', error);
-        setErrorMessage(`Error loading PDF template: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setErrorMessage('Failed to load PDF template');
         setShowError(true);
       }
     };
@@ -249,11 +221,13 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
     loadPdfTemplate();
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target as HTMLInputElement;
+  const handleInputChange = (field: keyof RentalApplicationFormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [field]: value,
     }));
   };
 
@@ -280,39 +254,8 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
         const fields = form.getFields();
         console.log('PDF Form Fields:', fields.map(f => f.getName()));
         
-        // Format the date as MM/DD for the PDF
-        const date = new Date();
-        const formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
-        const year = date.getFullYear().toString().slice(2);
-
-        // Fill the date fields in the PDF
-        form.getTextField('Date').setText(formattedDate);
-        form.getTextField('Year').setText(year);
-        
-        // Try different possible field names for property address
-        const addressFieldNames = ['At', 'at', 'Property Address', 'propertyAddress', 'Address'];
-        let addressFieldFound = false;
-        
-        for (const fieldName of addressFieldNames) {
-          try {
-            const field = form.getTextField(fieldName);
-            if (field) {
-              field.setText(propertyAddress);
-              addressFieldFound = true;
-              console.log(`Successfully set property address in field: ${fieldName}`);
-              break;
-            }
-          } catch (error) {
-            console.log(`Field ${fieldName} not found, trying next...`);
-          }
-        }
-
-        if (!addressFieldFound) {
-          console.error('Could not find property address field in PDF');
-        }
-
-        // Fill other form fields
-        fillFormFields(form, formData);
+        // Fill form fields using the new revised function
+        fillFormFieldsRevised(form, formData);
       } catch (error) {
         console.error('Error filling form fields:', error);
         throw error;
@@ -329,7 +272,8 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
 
       console.log('Sending application to backend...');
       // Save the application to the backend
-      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + '/api/rental-applications', {
+      const apiUrl = (window as any).REACT_APP_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/rental-applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -390,68 +334,46 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
       </Typography>
 
       <form onSubmit={handleSubmit}>
+        {/* Rental History: Eviction/Bankruptcy */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Rental History
+        </Typography>
         <Grid container spacing={3}>
-          {/* Agent/Broker Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Agent/Broker Information
-            </Typography>
+          <Grid item xs={12} sm={6}>
+            <FormControl component="fieldset">
+              <Typography>Have you ever been party to an eviction?</Typography>
+              <RadioGroup
+                row
+                name="hasEviction"
+                value={formData.hasEviction}
+                onChange={handleInputChange('hasEviction')}
+              >
+                <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
+                <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
+              </RadioGroup>
+            </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Prepared by Agent"
-              name="preparedByAgent"
-              value={formData.preparedByAgent}
-              InputProps={{
-                readOnly: true,
-              }}
-              required
-            />
+            <FormControl component="fieldset">
+              <Typography>Have you ever filed bankruptcy?</Typography>
+              <RadioGroup
+                row
+                name="hasBankruptcy"
+                value={formData.hasBankruptcy}
+                onChange={handleInputChange('hasBankruptcy')}
+              >
+                <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
+                <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
+              </RadioGroup>
+            </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Broker"
-              name="preparedByBroker"
-              value={formData.preparedByBroker}
-              InputProps={{
-                readOnly: true,
-              }}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Phone"
-              name="agentPhone"
-              value={formData.agentPhone}
-              InputProps={{
-                readOnly: true,
-              }}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Email"
-              name="agentEmail"
-              value={formData.agentEmail}
-              InputProps={{
-                readOnly: true,
-              }}
-              required
-            />
-          </Grid>
+        </Grid>
 
-          {/* Credit Application Details */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Credit Application Details
-            </Typography>
-          </Grid>
+        {/* Application Details Section */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 3, mb: 2 }}>
+          Application Details
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
@@ -479,7 +401,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="At"
+              label="Property Address"
               name="propertyAddress"
               value={formData.propertyAddress}
               InputProps={{
@@ -512,32 +434,68 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               required
             />
           </Grid>
+        </Grid>
+
+        {/* Agent/Broker Information */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Agent/Broker Information
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Deposit Amount"
-              name="depositAmount"
-              value={formData.monthlyRentAmount}
-              InputProps={{
-                readOnly: true,
-              }}
+              label="Prepared by Agent"
+              name="preparedByAgent"
+              value={formData.preparedByAgent}
+              onChange={handleInputChange('preparedByAgent')}
               required
             />
           </Grid>
-
-          {/* Applicant One Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Applicant One Information
-            </Typography>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Broker"
+              name="preparedByBroker"
+              value={formData.preparedByBroker}
+              onChange={handleInputChange('preparedByBroker')}
+              required
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Name"
+              label="Agent Phone"
+              name="agentPhone"
+              value={formData.agentPhone}
+              onChange={handleInputChange('agentPhone')}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Agent Email"
+              name="agentEmail"
+              type="email"
+              value={formData.agentEmail}
+              onChange={handleInputChange('agentEmail')}
+              required
+            />
+          </Grid>
+        </Grid>
+
+        {/* Applicant One Information */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Applicant One Information
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Full Name"
               name="applicantOneName"
               value={formData.applicantOneName}
-              onChange={handleInputChange}
+              onChange={handleInputChange('applicantOneName')}
               required
             />
           </Grid>
@@ -548,9 +506,9 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               name="applicantOneDOB"
               type="date"
               value={formData.applicantOneDOB}
-              onChange={handleInputChange}
-              required
+              onChange={handleInputChange('applicantOneDOB')}
               InputLabelProps={{ shrink: true }}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -559,7 +517,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Social Security Number"
               name="applicantOneSSN"
               value={formData.applicantOneSSN}
-              onChange={handleInputChange}
+              onChange={handleInputChange('applicantOneSSN')}
               required
             />
           </Grid>
@@ -569,7 +527,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Driver's License"
               name="applicantOneDriversLic"
               value={formData.applicantOneDriversLic}
-              onChange={handleInputChange}
+              onChange={handleInputChange('applicantOneDriversLic')}
               required
             />
           </Grid>
@@ -579,7 +537,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="State"
               name="applicantOneState"
               value={formData.applicantOneState}
-              onChange={handleInputChange}
+              onChange={handleInputChange('applicantOneState')}
               required
             />
           </Grid>
@@ -589,7 +547,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Phone"
               name="applicantOnePhone"
               value={formData.applicantOnePhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('applicantOnePhone')}
               required
             />
           </Grid>
@@ -599,8 +557,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Cell"
               name="applicantOneCell"
               value={formData.applicantOneCell}
-              onChange={handleInputChange}
-              required
+              onChange={handleInputChange('applicantOneCell')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -608,25 +565,45 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               fullWidth
               label="Email"
               name="applicantOneEmail"
+              type="email"
               value={formData.applicantOneEmail}
-              onChange={handleInputChange}
+              onChange={handleInputChange('applicantOneEmail')}
               required
             />
           </Grid>
+        </Grid>
 
-          {/* Present Address */}
+        {/* Additional Occupants */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Additional Occupants
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Present Address
-            </Typography>
+            <TextField
+              fullWidth
+              label="Additional Occupants"
+              name="additionalOccupants"
+              value={formData.additionalOccupants}
+              onChange={handleInputChange('additionalOccupants')}
+              helperText="List all additional occupants who will live in the property"
+              multiline
+              rows={3}
+            />
           </Grid>
+        </Grid>
+
+        {/* Present Address */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Present Address
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
               fullWidth
               label="Address"
               name="presentAddress"
               value={formData.presentAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentAddress')}
               required
             />
           </Grid>
@@ -636,17 +613,17 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="City"
               name="presentCity"
               value={formData.presentCity}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentCity')}
               required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Zip"
+              label="Zip Code"
               name="presentZip"
               value={formData.presentZip}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentZip')}
               required
             />
           </Grid>
@@ -656,7 +633,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Length of Residency"
               name="presentLengthOfResidency"
               value={formData.presentLengthOfResidency}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLengthOfResidency')}
               required
             />
           </Grid>
@@ -666,24 +643,24 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Monthly Rent"
               name="presentMonthlyRent"
               value={formData.presentMonthlyRent}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentMonthlyRent')}
               required
             />
           </Grid>
+        </Grid>
 
-          {/* Present Landlord Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Present Landlord Information
-            </Typography>
-          </Grid>
+        {/* Present Landlord Information */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Present Landlord Information
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Landlord/Agent"
               name="presentLandlordAgent"
               value={formData.presentLandlordAgent}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLandlordAgent')}
               required
             />
           </Grid>
@@ -693,62 +670,63 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="DRE #"
               name="presentLandlordDRE"
               value={formData.presentLandlordDRE}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLandlordDRE')}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Address"
+              label="Landlord Address"
               name="presentLandlordAddress"
               value={formData.presentLandlordAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLandlordAddress')}
               required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Phone"
+              label="Landlord Phone"
               name="presentLandlordPhone"
               value={formData.presentLandlordPhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLandlordPhone')}
               required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Cell"
+              label="Landlord Cell"
               name="presentLandlordCell"
               value={formData.presentLandlordCell}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLandlordCell')}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Email"
+              label="Landlord Email"
               name="presentLandlordEmail"
+              type="email"
               value={formData.presentLandlordEmail}
-              onChange={handleInputChange}
+              onChange={handleInputChange('presentLandlordEmail')}
               required
             />
           </Grid>
+        </Grid>
 
-          {/* Moving Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Moving Information
-            </Typography>
-          </Grid>
+        {/* Moving Information */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Moving Information
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
               fullWidth
               label="Reason for Moving"
               name="reasonForMoving"
               value={formData.reasonForMoving}
-              onChange={handleInputChange}
+              onChange={handleInputChange('reasonForMoving')}
               required
             />
           </Grid>
@@ -759,77 +737,25 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               name="movingDate"
               type="date"
               value={formData.movingDate}
-              onChange={handleInputChange}
-              required
+              onChange={handleInputChange('movingDate')}
               InputLabelProps={{ shrink: true }}
+              required
             />
           </Grid>
+        </Grid>
 
-          {/* Additional Occupants */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Additional Occupants
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Additional Occupants"
-              name="additionalOccupants"
-              value={formData.additionalOccupants}
-              onChange={handleInputChange}
-              helperText="Enter 'None' if no additional occupants"
-            />
-          </Grid>
-
-          {/* Rental History */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Rental History
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl component="fieldset">
-              <Typography variant="subtitle1">Have you ever been party to an eviction?</Typography>
-              <RadioGroup
-                row
-                name="hasEviction"
-                value={formData.hasEviction}
-                onChange={handleInputChange}
-              >
-                <FormControlLabel value={true} control={<Radio />} label="Yes" />
-                <FormControlLabel value={false} control={<Radio />} label="No" />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <FormControl component="fieldset">
-              <Typography variant="subtitle1">Have you filed bankruptcy?</Typography>
-              <RadioGroup
-                row
-                name="hasBankruptcy"
-                value={formData.hasBankruptcy}
-                onChange={handleInputChange}
-              >
-                <FormControlLabel value={true} control={<Radio />} label="Yes" />
-                <FormControlLabel value={false} control={<Radio />} label="No" />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-
-          {/* Previous Address */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Previous Address
-            </Typography>
-          </Grid>
+        {/* Previous Address */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Previous Address (if applicable)
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
               fullWidth
               label="Address"
               name="previousAddress"
               value={formData.previousAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousAddress')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -838,16 +764,16 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="City"
               name="previousCity"
               value={formData.previousCity}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousCity')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Zip"
+              label="Zip Code"
               name="previousZip"
               value={formData.previousZip}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousZip')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -856,7 +782,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Length of Residency"
               name="previousLengthOfResidency"
               value={formData.previousLengthOfResidency}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLengthOfResidency')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -865,132 +791,90 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Monthly Rent"
               name="previousMonthlyRent"
               value={formData.previousMonthlyRent}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousMonthlyRent')}
             />
           </Grid>
+        </Grid>
 
-          {/* Previous Landlord Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Previous Landlord Information
-            </Typography>
-          </Grid>
+        {/* Previous Landlord Details */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Previous Landlord Details
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Landlord/Agent"
+              label="Previous Landlord/Agent Name"
               name="previousLandlordAgent"
               value={formData.previousLandlordAgent}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLandlordAgent')}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="DRE #"
+              label="Previous Landlord DRE"
               name="previousLandlordDRE"
               value={formData.previousLandlordDRE}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLandlordDRE')}
+              required
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Address"
+              label="Previous Landlord Address"
               name="previousLandlordAddress"
               value={formData.previousLandlordAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLandlordAddress')}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Phone"
+              label="Previous Landlord Phone"
               name="previousLandlordPhone"
               value={formData.previousLandlordPhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLandlordPhone')}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Cell"
+              label="Previous Landlord Cell"
               name="previousLandlordCell"
               value={formData.previousLandlordCell}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLandlordCell')}
+              required
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Email"
+              label="Previous Landlord Email"
               name="previousLandlordEmail"
               value={formData.previousLandlordEmail}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousLandlordEmail')}
+              required
             />
           </Grid>
+        </Grid>
 
-          {/* Employment Information */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Employment Information
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
+        {/* Employment Information */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Employment Information
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Employer"
               name="employerOne"
               value={formData.employerOne}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Address"
-              name="employerOneAddress"
-              value={formData.employerOneAddress}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Phone"
-              name="employerOnePhone"
-              value={formData.employerOnePhone}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Cell"
-              name="employerOneCell"
-              value={formData.employerOneCell}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Email"
-              name="employerOneEmail"
-              value={formData.employerOneEmail}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Length of Employment"
-              name="employerOneLengthOfEmployment"
-              value={formData.employerOneLengthOfEmployment}
-              onChange={handleInputChange}
+              onChange={handleInputChange('employerOne')}
               required
             />
           </Grid>
@@ -1000,98 +884,109 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Position"
               name="employerOnePosition"
               value={formData.employerOnePosition}
-              onChange={handleInputChange}
+              onChange={handleInputChange('employerOnePosition')}
               required
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Wages"
-              name="employerOneWages"
-              value={formData.employerOneWages}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Pay Period"
-              name="employerOnePayPeriod"
-              value={formData.employerOnePayPeriod}
-              onChange={handleInputChange}
-              required
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Union"
-              name="employerOneUnion"
-              value={formData.employerOneUnion}
-              onChange={handleInputChange}
-            />
-          </Grid>
-
-          {/* Previous Employment */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Previous Employment
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Previous Employer"
-              name="previousEmployerOne"
-              value={formData.previousEmployerOne}
-              onChange={handleInputChange}
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Address"
-              name="previousEmployerOneAddress"
-              value={formData.previousEmployerOneAddress}
-              onChange={handleInputChange}
+              label="Employer Address"
+              name="employerOneAddress"
+              value={formData.employerOneAddress}
+              onChange={handleInputChange('employerOneAddress')}
+              required
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Phone"
-              name="previousEmployerOnePhone"
-              value={formData.previousEmployerOnePhone}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Cell"
-              name="previousEmployerOneCell"
-              value={formData.previousEmployerOneCell}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Email"
-              name="previousEmployerOneEmail"
-              value={formData.previousEmployerOneEmail}
-              onChange={handleInputChange}
+              label="Employer Phone"
+              name="employerOnePhone"
+              value={formData.employerOnePhone}
+              onChange={handleInputChange('employerOnePhone')}
+              required
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Length of Employment"
-              name="previousEmployerOneLengthOfEmployment"
-              value={formData.previousEmployerOneLengthOfEmployment}
-              onChange={handleInputChange}
+              name="employerOneLengthOfEmployment"
+              value={formData.employerOneLengthOfEmployment}
+              onChange={handleInputChange('employerOneLengthOfEmployment')}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Monthly Wages"
+              name="employerOneWages"
+              value={formData.employerOneWages}
+              onChange={handleInputChange('employerOneWages')}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Pay Period"
+              name="employerOnePayPeriod"
+              value={formData.employerOnePayPeriod}
+              onChange={handleInputChange('employerOnePayPeriod')}
+              required
+            />
+          </Grid>
+        </Grid>
+
+        {/* Rental History */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Rental History
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <FormControl component="fieldset">
+              <Typography>Have you ever been party to an eviction?</Typography>
+              <RadioGroup
+                row
+                name="hasEviction"
+                value={formData.hasEviction}
+                onChange={handleInputChange('hasEviction')}
+              >
+                <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
+                <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
+              </RadioGroup>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl component="fieldset">
+              <Typography>Have you ever filed bankruptcy?</Typography>
+              <RadioGroup
+                row
+                name="hasBankruptcy"
+                value={formData.hasBankruptcy}
+                onChange={handleInputChange('hasBankruptcy')}
+              >
+                <FormControlLabel value="yes" control={<Radio color="primary" />} label="Yes" />
+                <FormControlLabel value="no" control={<Radio color="primary" />} label="No" />
+              </RadioGroup>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        {/* Previous Employment */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Previous Employment (if applicable)
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Previous Employer"
+              name="previousEmployerOne"
+              value={formData.previousEmployerOne}
+              onChange={handleInputChange('previousEmployerOne')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1100,50 +995,50 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Position"
               name="previousEmployerOnePosition"
               value={formData.previousEmployerOnePosition}
-              onChange={handleInputChange}
+              onChange={handleInputChange('previousEmployerOnePosition')}
             />
           </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Wages"
-              name="previousEmployerOneWages"
-              value={formData.previousEmployerOneWages}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Pay Period"
-              name="previousEmployerOnePayPeriod"
-              value={formData.previousEmployerOnePayPeriod}
-              onChange={handleInputChange}
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              fullWidth
-              label="Union"
-              name="previousEmployerOneUnion"
-              value={formData.previousEmployerOneUnion}
-              onChange={handleInputChange}
-            />
-          </Grid>
-
-          {/* Additional Income */}
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Additional Income
-            </Typography>
+            <TextField
+              fullWidth
+              label="Employer Address"
+              name="previousEmployerOneAddress"
+              value={formData.previousEmployerOneAddress}
+              onChange={handleInputChange('previousEmployerOneAddress')}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Amount"
+              label="Employer Phone"
+              name="previousEmployerOnePhone"
+              value={formData.previousEmployerOnePhone}
+              onChange={handleInputChange('previousEmployerOnePhone')}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Length of Employment"
+              name="previousEmployerOneLengthOfEmployment"
+              value={formData.previousEmployerOneLengthOfEmployment}
+              onChange={handleInputChange('previousEmployerOneLengthOfEmployment')}
+            />
+          </Grid>
+        </Grid>
+
+        {/* Additional Income */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Additional Income (if applicable)
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Additional Income Amount"
               name="additionalIncomeAmount"
               value={formData.additionalIncomeAmount}
-              onChange={handleInputChange}
+              onChange={handleInputChange('additionalIncomeAmount')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1152,7 +1047,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Source"
               name="additionalIncomeSource"
               value={formData.additionalIncomeSource}
-              onChange={handleInputChange}
+              onChange={handleInputChange('additionalIncomeSource')}
             />
           </Grid>
           <Grid item xs={12}>
@@ -1161,20 +1056,18 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Recipient"
               name="additionalIncomeRecipient"
               value={formData.additionalIncomeRecipient}
-              onChange={handleInputChange}
+              onChange={handleInputChange('additionalIncomeRecipient')}
             />
           </Grid>
+        </Grid>
 
-          {/* Automobiles */}
+        {/* Automobiles */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Automobiles
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Automobiles
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Vehicle 1
-            </Typography>
+            <Typography variant="h6" gutterBottom>Vehicle 1</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -1182,7 +1075,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Make"
               name="autoOneMake"
               value={formData.autoOneMake}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoOneMake')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1191,7 +1084,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Year"
               name="autoOneYear"
               value={formData.autoOneYear}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoOneYear')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1200,7 +1093,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Model"
               name="autoOneModel"
               value={formData.autoOneModel}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoOneModel')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1209,7 +1102,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="License State"
               name="autoOneLicState"
               value={formData.autoOneLicState}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoOneLicState')}
             />
           </Grid>
           <Grid item xs={12}>
@@ -1218,14 +1111,12 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Lender"
               name="autoOneLender"
               value={formData.autoOneLender}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoOneLender')}
             />
           </Grid>
-
+          
           <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Vehicle 2
-            </Typography>
+            <Typography variant="h6" gutterBottom>Vehicle 2 (if applicable)</Typography>
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
@@ -1233,7 +1124,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Make"
               name="autoTwoMake"
               value={formData.autoTwoMake}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoTwoMake')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1242,7 +1133,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Year"
               name="autoTwoYear"
               value={formData.autoTwoYear}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoTwoYear')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1251,7 +1142,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Model"
               name="autoTwoModel"
               value={formData.autoTwoModel}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoTwoModel')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -1260,7 +1151,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="License State"
               name="autoTwoLicState"
               value={formData.autoTwoLicState}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoTwoLicState')}
             />
           </Grid>
           <Grid item xs={12}>
@@ -1269,92 +1160,86 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Lender"
               name="autoTwoLender"
               value={formData.autoTwoLender}
-              onChange={handleInputChange}
+              onChange={handleInputChange('autoTwoLender')}
             />
           </Grid>
+        </Grid>
 
-          {/* Bank Accounts */}
+        {/* Bank Accounts */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Bank Accounts
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Bank Accounts
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Bank 1
-            </Typography>
+            <Typography variant="h6" gutterBottom>Bank 1</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Bank/branch"
+              label="Bank/Branch"
               name="bankOneBranch"
               value={formData.bankOneBranch}
-              onChange={handleInputChange}
+              onChange={handleInputChange('bankOneBranch')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Check acc. #"
+              label="Checking Account #"
               name="bankOneChecking"
               value={formData.bankOneChecking}
-              onChange={handleInputChange}
+              onChange={handleInputChange('bankOneChecking')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Savings Acc. #"
+              label="Savings Account #"
               name="bankOneSavings"
               value={formData.bankOneSavings}
-              onChange={handleInputChange}
+              onChange={handleInputChange('bankOneSavings')}
             />
           </Grid>
-
+          
           <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Bank 2
-            </Typography>
+            <Typography variant="h6" gutterBottom>Bank 2 (if applicable)</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Bank/branch"
+              label="Bank/Branch"
               name="bankTwoBranch"
               value={formData.bankTwoBranch}
-              onChange={handleInputChange}
+              onChange={handleInputChange('bankTwoBranch')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Check acc. #"
+              label="Checking Account #"
               name="bankTwoChecking"
               value={formData.bankTwoChecking}
-              onChange={handleInputChange}
+              onChange={handleInputChange('bankTwoChecking')}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
-              label="Savings Acc. #"
+              label="Savings Account #"
               name="bankTwoSavings"
               value={formData.bankTwoSavings}
-              onChange={handleInputChange}
+              onChange={handleInputChange('bankTwoSavings')}
             />
           </Grid>
+        </Grid>
 
-          {/* Credit References */}
+        {/* Credit References */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Credit References
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Credit References
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Reference 1
-            </Typography>
+            <Typography variant="h6" gutterBottom>Reference 1</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
@@ -1362,7 +1247,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Name"
               name="creditRefOneName"
               value={formData.creditRefOneName}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefOneName')}
             />
           </Grid>
           <Grid item xs={12}>
@@ -1371,7 +1256,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Address"
               name="creditRefOneAddress"
               value={formData.creditRefOneAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefOneAddress')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1380,16 +1265,16 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Account #"
               name="creditRefOneAccountNum"
               value={formData.creditRefOneAccountNum}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefOneAccountNum')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="Balance due $"
+              label="Balance Due $"
               name="creditRefOneBalance"
               value={formData.creditRefOneBalance}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefOneBalance')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1398,14 +1283,12 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Phone"
               name="creditRefOnePhone"
               value={formData.creditRefOnePhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefOnePhone')}
             />
           </Grid>
-
+          
           <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Reference 2
-            </Typography>
+            <Typography variant="h6" gutterBottom>Reference 2</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
@@ -1413,7 +1296,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Name"
               name="creditRefTwoName"
               value={formData.creditRefTwoName}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefTwoName')}
             />
           </Grid>
           <Grid item xs={12}>
@@ -1422,7 +1305,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Address"
               name="creditRefTwoAddress"
               value={formData.creditRefTwoAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefTwoAddress')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1431,16 +1314,16 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Account #"
               name="creditRefTwoAccountNum"
               value={formData.creditRefTwoAccountNum}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefTwoAccountNum')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
             <TextField
               fullWidth
-              label="Balance due $"
+              label="Balance Due $"
               name="creditRefTwoBalance"
               value={formData.creditRefTwoBalance}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefTwoBalance')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1449,23 +1332,23 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Phone"
               name="creditRefTwoPhone"
               value={formData.creditRefTwoPhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('creditRefTwoPhone')}
             />
           </Grid>
+        </Grid>
 
-          {/* Personal Reference */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Personal Reference
-            </Typography>
-          </Grid>
+        {/* Personal References */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Personal References
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
             <TextField
               fullWidth
               label="Name"
               name="personalRefName"
               value={formData.personalRefName}
-              onChange={handleInputChange}
+              onChange={handleInputChange('personalRefName')}
               required
             />
           </Grid>
@@ -1475,7 +1358,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Address"
               name="personalRefAddress"
               value={formData.personalRefAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('personalRefAddress')}
               required
             />
           </Grid>
@@ -1485,7 +1368,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Phone"
               name="personalRefPhone"
               value={formData.personalRefPhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('personalRefPhone')}
               required
             />
           </Grid>
@@ -1495,7 +1378,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Cell"
               name="personalRefCell"
               value={formData.personalRefCell}
-              onChange={handleInputChange}
+              onChange={handleInputChange('personalRefCell')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1503,25 +1386,39 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               fullWidth
               label="Email"
               name="personalRefEmail"
+              type="email"
               value={formData.personalRefEmail}
-              onChange={handleInputChange}
+              onChange={handleInputChange('personalRefEmail')}
               required
             />
           </Grid>
+        </Grid>
 
-          {/* Nearest Relative */}
+        {/* Emergency Contacts */}
+        <Typography variant="h5" gutterBottom sx={{ mt: 4, mb: 2 }}>
+          Emergency Contacts
+        </Typography>
+        <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Nearest Relative
-            </Typography>
+            <Typography variant="h6" gutterBottom>Nearest Relative</Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Name/Relationship"
               name="nearestRelativeName"
               value={formData.nearestRelativeName}
-              onChange={handleInputChange}
+              onChange={handleInputChange('nearestRelativeName')}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Relation"
+              name="nearestRelativeRelation"
+              value={formData.nearestRelativeRelation}
+              onChange={handleInputChange('nearestRelativeRelation')}
               required
             />
           </Grid>
@@ -1531,7 +1428,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Address"
               name="nearestRelativeAddress"
               value={formData.nearestRelativeAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('nearestRelativeAddress')}
               required
             />
           </Grid>
@@ -1541,7 +1438,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Phone"
               name="nearestRelativePhone"
               value={formData.nearestRelativePhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('nearestRelativePhone')}
               required
             />
           </Grid>
@@ -1551,7 +1448,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Cell"
               name="nearestRelativeCell"
               value={formData.nearestRelativeCell}
-              onChange={handleInputChange}
+              onChange={handleInputChange('nearestRelativeCell')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1559,25 +1456,33 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               fullWidth
               label="Email"
               name="nearestRelativeEmail"
+              type="email"
               value={formData.nearestRelativeEmail}
-              onChange={handleInputChange}
+              onChange={handleInputChange('nearestRelativeEmail')}
               required
             />
           </Grid>
-
-          {/* Emergency Contact */}
+          
           <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Emergency Contact
-            </Typography>
+            <Typography variant="h6" gutterBottom>Emergency Contact</Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
               label="Name/Relationship"
               name="emergencyContactName"
               value={formData.emergencyContactName}
-              onChange={handleInputChange}
+              onChange={handleInputChange('emergencyContactName')}
+              required
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Relation"
+              name="emergencyContactRelation"
+              value={formData.emergencyContactRelation}
+              onChange={handleInputChange('emergencyContactRelation')}
               required
             />
           </Grid>
@@ -1587,7 +1492,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Address"
               name="emergencyContactAddress"
               value={formData.emergencyContactAddress}
-              onChange={handleInputChange}
+              onChange={handleInputChange('emergencyContactAddress')}
               required
             />
           </Grid>
@@ -1597,7 +1502,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Phone"
               name="emergencyContactPhone"
               value={formData.emergencyContactPhone}
-              onChange={handleInputChange}
+              onChange={handleInputChange('emergencyContactPhone')}
               required
             />
           </Grid>
@@ -1607,7 +1512,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               label="Cell"
               name="emergencyContactCell"
               value={formData.emergencyContactCell}
-              onChange={handleInputChange}
+              onChange={handleInputChange('emergencyContactCell')}
             />
           </Grid>
           <Grid item xs={12} sm={4}>
@@ -1615,80 +1520,30 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
               fullWidth
               label="Email"
               name="emergencyContactEmail"
+              type="email"
               value={formData.emergencyContactEmail}
-              onChange={handleInputChange}
+              onChange={handleInputChange('emergencyContactEmail')}
               required
             />
-          </Grid>
-
-          {/* Acknowledgment */}
-          <Grid item xs={12}>
-            <Typography variant="h6" gutterBottom>
-              Acknowledgment
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Date"
-              name="acknowledgmentDate"
-              type="date"
-              value={formData.acknowledgmentDate}
-              onChange={handleInputChange}
-              required
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleInputChange}
-                  required
-                />
-              }
-              label="I acknowledge that all information provided is true and accurate"
-            />
-          </Grid>
-
-          {/* Submit Button */}
-          <Grid item xs={12}>
-            <Box sx={{ mt: 3 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Processing...' : 'Submit Application'}
-              </Button>
-            </Box>
           </Grid>
         </Grid>
-      </form>
 
-      {applicationGenerated && (
-        <Box sx={{ mt: 3, textAlign: 'center' }}>
-          <Typography variant="h6" gutterBottom>
-            Your application has been generated successfully!
-          </Typography>
-          <Typography variant="body1" gutterBottom>
-            Please download, sign, and submit the application along with the required documents.
-          </Typography>
+        {/* Submit Button */}
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
           <Button
+            type="submit"
             variant="contained"
             color="primary"
-            onClick={handleApplicationGenerated}
-            sx={{ mt: 2 }}
+            size="large"
+            disabled={isLoading}
+            sx={{ minWidth: 200 }}
           >
-            Proceed to Submission
+            {isLoading ? 'Submitting...' : 'Submit Application'}
           </Button>
         </Box>
-      )}
+      </form>
 
-      {/* Success Message */}
+      {/* Success/Error Messages */}
       <Snackbar
         open={showSuccess}
         autoHideDuration={6000}
@@ -1699,7 +1554,6 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
         </Alert>
       </Snackbar>
 
-      {/* Error Message */}
       <Snackbar
         open={showError}
         autoHideDuration={6000}

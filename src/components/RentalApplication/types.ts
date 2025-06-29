@@ -34,22 +34,12 @@ export interface RentalApplicationFormData {
   applicantOneCell: string;
   applicantOneEmail: string;
 
-  // Applicant Two Information
-  applicantTwoName: string;
-  applicantTwoDOB: string;
-  applicantTwoSSN: string;
-  applicantTwoDriversLic: string;
-  applicantTwoState: string;
-  applicantTwoPhone: string;
-  applicantTwoCell: string;
-  applicantTwoEmail: string;
-
   // Additional Occupants
   additionalOccupants: string;
 
   // Rental History
-  hasEviction: boolean;
-  hasBankruptcy: boolean;
+  hasEviction: 'yes' | 'no';
+  hasBankruptcy: 'yes' | 'no';
 
   // Present Address
   presentAddress: string;
@@ -102,18 +92,6 @@ export interface RentalApplicationFormData {
   previousEmployerOneWages: string;
   previousEmployerOnePayPeriod: string;
   previousEmployerOneUnion: string;
-
-  // Employment Information - Applicant Two
-  employerTwo: string;
-  employerTwoAddress: string;
-  employerTwoPhone: string;
-  employerTwoCell: string;
-  employerTwoEmail: string;
-  employerTwoLengthOfEmployment: string;
-  employerTwoPosition: string;
-  employerTwoWages: string;
-  employerTwoPayPeriod: string;
-  employerTwoUnion: string;
 
   // Additional Income
   additionalIncomeAmount: string;
