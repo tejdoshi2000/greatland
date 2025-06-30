@@ -380,6 +380,50 @@ router.get('/:id/pdf-status', async (req, res) => {
   }
 });
 
+// Update existing rental application (for adding PDF)
+router.patch('/:id', async (req, res) => {
+  try {
+    const { pdfBase64, hasPdfBase64 } = req.body;
+    
+    console.log('Updating application with PDF:', {
+      applicationId: req.params.id,
+      hasPdfBase64: req.body.hasPdfBase64,
+      pdfBase64Type: typeof req.body.pdfBase64,
+      pdfBase64Length: req.body.pdfBase64 ? req.body.pdfBase64.length : 0,
+      pdfBase64Exists: !!req.body.pdfBase64,
+      pdfBase64StartsWith: req.body.pdfBase64 ? req.body.pdfBase64.substring(0, 20) : 'none'
+    });
+
+    const application = await RentalApplication.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Update PDF data
+    if (pdfBase64 !== undefined) {
+      application.pdfBase64 = pdfBase64;
+    }
+    
+    if (hasPdfBase64 !== undefined) {
+      application.hasPdfBase64 = hasPdfBase64;
+    }
+
+    await application.save();
+
+    console.log('Application updated successfully:', {
+      applicationId: application._id,
+      hasPdfBase64: application.hasPdfBase64,
+      pdfBase64Length: application.pdfBase64 ? application.pdfBase64.length : 0
+    });
+
+    res.json(application);
+  } catch (error) {
+    console.error('Error updating rental application:', error);
+    res.status(500).json({ error: 'Failed to update rental application' });
+  }
+});
+
 // Update application status (admin only)
 router.put('/:id/status', auth, async (req, res) => {
   try {
