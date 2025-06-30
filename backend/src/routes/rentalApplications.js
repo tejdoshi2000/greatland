@@ -361,6 +361,25 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
+// Public endpoint to check if application has PDF (no auth required)
+router.get('/:id/pdf-status', async (req, res) => {
+  try {
+    const application = await RentalApplication.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    res.json({
+      hasPdf: application.hasPdfBase64 && application.pdfBase64,
+      applicationId: application._id
+    });
+  } catch (error) {
+    console.error('Error checking application PDF status:', error);
+    res.status(500).json({ error: 'Failed to check PDF status' });
+  }
+});
+
 // Update application status (admin only)
 router.put('/:id/status', auth, async (req, res) => {
   try {
