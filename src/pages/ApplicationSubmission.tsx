@@ -269,6 +269,7 @@ export default function ApplicationSubmission() {
   // New state for dynamic workflow
   const [needsApplicationGeneration, setNeedsApplicationGeneration] = useState<boolean>(false);
   const [dynamicSteps, setDynamicSteps] = useState<string[]>(steps);
+  const [applicationGenerated, setApplicationGenerated] = useState<boolean>(false);
 
   // File input refs
   const rentalFileRef = React.useRef<HTMLInputElement>(null);
@@ -468,8 +469,15 @@ export default function ApplicationSubmission() {
       const currentStepName = dynamicSteps[activeStep];
       
       if (currentStepName === 'Generate Application') {
-        // This is the application generation step - just proceed to next step
-        // The actual generation will happen in the step content
+        // This is the application generation step - check if PDF has been generated
+        const hasPdf = await checkApplicationPdfStatus();
+        if (!hasPdf) {
+          setError('Please generate your rental application before proceeding. The application form must be filled out and submitted.');
+          return;
+        }
+        // If PDF exists, update workflow to normal flow and proceed
+        setNeedsApplicationGeneration(false);
+        setDynamicSteps(steps);
       } else if (currentStepName === 'Upload Documents') {
         // On the documents step, check if all required documents are uploaded
         const requiredTypes: DocumentType[] = ['rental', 'id', 'ssn'];
@@ -596,6 +604,10 @@ export default function ApplicationSubmission() {
   const handleBack = () => {
     setActiveStep((prevStep) => prevStep - 1);
     setError(null);
+    // Reset application generated state when going back from Generate Application step
+    if (dynamicSteps[activeStep - 1] === 'Generate Application') {
+      setApplicationGenerated(false);
+    }
   };
 
   const handleAddCoApplicant = () => {
@@ -821,8 +833,10 @@ export default function ApplicationSubmission() {
     const hasPdf = await checkApplicationPdfStatus();
     if (hasPdf) {
       // Application now has PDF, update workflow to normal flow
+      setApplicationGenerated(true);
       setNeedsApplicationGeneration(false);
       setDynamicSteps(steps);
+      setActiveStep(2); // Move to Upload Documents step
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     }
@@ -842,6 +856,7 @@ export default function ApplicationSubmission() {
         const hasPdf = await checkApplicationPdfStatus();
         if (hasPdf) {
           // Application now has PDF, update workflow to normal flow
+          setApplicationGenerated(true);
           setNeedsApplicationGeneration(false);
           setDynamicSteps(steps);
           setActiveStep(2); // Move to Upload Documents step
@@ -857,6 +872,13 @@ export default function ApplicationSubmission() {
       return () => clearInterval(interval);
     }
   }, [activeStep, dynamicSteps, applicationId]);
+
+  // Reset applicationGenerated when workflow changes
+  useEffect(() => {
+    if (needsApplicationGeneration) {
+      setApplicationGenerated(false);
+    }
+  }, [needsApplicationGeneration]);
 
   const getStepContent = (step: number) => {
     const currentStepName = dynamicSteps[step];
@@ -1003,17 +1025,25 @@ export default function ApplicationSubmission() {
             >
               Please fill out and generate your rental application below. Once generated, you will automatically proceed to the next step.
             </Typography>
+            
+            {applicationGenerated && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Application generated successfully! You can now proceed to the next step.
+              </Alert>
+            )}
+            
             {selectedPropertyObj && (
               <RentalApplication
                 propertyName={selectedPropertyObj.title}
                 propertyAddress={selectedPropertyObj.location || selectedPropertyObj.title}
                 propertyId={selectedPropertyObj._id}
                 propertyPrice={selectedPropertyObj.price}
-                existingApplicationId={applicationId}
+                existingApplicationId={applicationId} // Pass the existing application ID
                 onClose={async () => {
                   // After generation, check PDF and advance step
                   const hasPdf = await checkApplicationPdfStatus();
                   if (hasPdf) {
+                    setApplicationGenerated(true);
                     setNeedsApplicationGeneration(false);
                     setDynamicSteps(steps);
                     setActiveStep(2); // Move to Upload Documents step
@@ -1333,7 +1363,11 @@ export default function ApplicationSubmission() {
           <Button
             variant="contained"
             onClick={handleNext}
-            disabled={activeStep === dynamicSteps.length - 1 || loading}
+            disabled={
+              activeStep === dynamicSteps.length - 1 || 
+              loading || 
+              (dynamicSteps[activeStep] === 'Generate Application' && !applicationGenerated)
+            }
             fullWidth={isMobile}
             sx={{
               minHeight: { xs: '48px', sm: '40px' },
