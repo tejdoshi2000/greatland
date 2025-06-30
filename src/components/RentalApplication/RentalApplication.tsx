@@ -27,6 +27,7 @@ interface RentalApplicationProps {
   onClose: () => void;
   propertyId: string;
   propertyPrice: number;
+  existingApplicationId?: string;
 }
 
 export const RentalApplication: React.FC<RentalApplicationProps> = ({
@@ -35,6 +36,7 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
   onClose,
   propertyId,
   propertyPrice,
+  existingApplicationId,
 }) => {
   const [formData, setFormData] = useState<RentalApplicationFormData>({
     // Agent/Broker Information
@@ -296,13 +298,31 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
         pdfBase64: requestBody.pdfBase64 ? `[BASE64 STRING - ${requestBody.pdfBase64.length} chars]` : 'null'
       });
       
-      const response = await fetch(`${apiUrl}/api/rental-applications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      let response;
+      if (existingApplicationId) {
+        // Update existing application with PDF
+        console.log('Updating existing application:', existingApplicationId);
+        response = await fetch(`${apiUrl}/api/rental-applications/${existingApplicationId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pdfBase64,
+            hasPdfBase64: true
+          }),
+        });
+      } else {
+        // Create new application
+        console.log('Creating new application');
+        response = await fetch(`${apiUrl}/api/rental-applications`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+      }
 
       console.log('Response status:', response.status);
       console.log('Response ok:', response.ok);

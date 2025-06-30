@@ -32,6 +32,7 @@ import PaymentForm from '../components/RentalApplication/PaymentForm';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { useNavigate } from 'react-router-dom';
+import { RentalApplication } from '../components/RentalApplication/RentalApplication';
 
 interface Property {
   _id: string;
@@ -978,6 +979,8 @@ export default function ApplicationSubmission() {
           </Box>
         );
       case 'Generate Application':
+        // Find the selected property object
+        const selectedPropertyObj = properties.find(p => p._id === selectedProperty);
         return (
           <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <Typography 
@@ -998,57 +1001,28 @@ export default function ApplicationSubmission() {
                 fontSize: { xs: '0.875rem', sm: '1rem' }
               }}
             >
-              You need to generate a rental application before proceeding. Click the button below to create and download your application form.
+              Please fill out and generate your rental application below. Once generated, you will automatically proceed to the next step.
             </Typography>
-            <Button
-              variant="contained"
-              onClick={() => {
-                // Navigate to the rental application generation page
-                window.location.href = `/rental-application/${selectedProperty}`;
-              }}
-              fullWidth
-              sx={{ 
-                mb: 2,
-                minHeight: { xs: '56px', sm: '48px' },
-                fontSize: { xs: '0.875rem', sm: '1rem' }
-              }}
-              size={isMobile ? "large" : "large"}
-            >
-              Generate Application Form
-            </Button>
-            <Typography 
-              variant="body2" 
-              color="text.secondary" 
-              sx={{ 
-                mb: 2,
-                fontSize: { xs: '0.875rem', sm: '1rem' }
-              }}
-            >
-              After generating the application, please print it, sign it, and then return to this page to continue with document upload.
-            </Typography>
-            <Button
-              variant="outlined"
-              onClick={async () => {
-                const hasPdf = await checkApplicationPdfStatus();
-                if (hasPdf) {
-                  setNeedsApplicationGeneration(false);
-                  setDynamicSteps(steps);
-                  setActiveStep(2); // Move to Upload Documents step
-                  setSuccess(true);
-                  setTimeout(() => setSuccess(false), 3000);
-                } else {
-                  setError('Application has not been generated yet. Please generate the application first.');
-                }
-              }}
-              fullWidth
-              sx={{ 
-                minHeight: { xs: '48px', sm: '40px' },
-                fontSize: { xs: '0.875rem', sm: '1rem' }
-              }}
-              size={isMobile ? "large" : "medium"}
-            >
-              I've Generated My Application - Continue
-            </Button>
+            {selectedPropertyObj && (
+              <RentalApplication
+                propertyName={selectedPropertyObj.title}
+                propertyAddress={selectedPropertyObj.location || selectedPropertyObj.title}
+                propertyId={selectedPropertyObj._id}
+                propertyPrice={selectedPropertyObj.price}
+                existingApplicationId={applicationId}
+                onClose={async () => {
+                  // After generation, check PDF and advance step
+                  const hasPdf = await checkApplicationPdfStatus();
+                  if (hasPdf) {
+                    setNeedsApplicationGeneration(false);
+                    setDynamicSteps(steps);
+                    setActiveStep(2); // Move to Upload Documents step
+                    setSuccess(true);
+                    setTimeout(() => setSuccess(false), 3000);
+                  }
+                }}
+              />
+            )}
           </Box>
         );
       case 'Upload Documents':
