@@ -20,7 +20,9 @@ import {
   Snackbar,
   Grid,
   IconButton,
-  Collapse
+  Collapse,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -132,6 +134,7 @@ const RentalApplications: React.FC = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+  const [tab, setTab] = useState<'all' | 'generated'>('all');
   const navigate = useNavigate();
 
   // Helper function to determine document type
@@ -323,6 +326,13 @@ const RentalApplications: React.FC = () => {
   };
 
   const handleViewPdf = (application: RentalApplication) => {
+    console.log('Viewing PDF for application:', {
+      id: application._id,
+      applicantName: application.applicantName,
+      hasPdfBase64: application.hasPdfBase64,
+      pdfBase64Length: application.pdfBase64 ? application.pdfBase64.length : 0,
+      pdfBase64StartsWith: application.pdfBase64 ? application.pdfBase64.substring(0, 20) : 'none'
+    });
     setSelectedApplication(application);
     setShowPdf(true);
   };
@@ -752,6 +762,54 @@ const RentalApplications: React.FC = () => {
     }
   };
 
+  const handleGeneratePdf = async (applicationId: string) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        setSnackbar({
+          open: true,
+          message: 'Not authenticated as admin',
+          severity: 'error'
+        });
+        return;
+      }
+
+      console.log('Generating PDF for application:', applicationId);
+
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/generate-pdf`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate PDF');
+      }
+
+      const data = await response.json();
+      console.log('PDF generated successfully:', data);
+
+      setSnackbar({
+        open: true,
+        message: 'PDF generated successfully',
+        severity: 'success'
+      });
+
+      // Refetch applications to update the UI
+      fetchApplications();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setSnackbar({
+        open: true,
+        message: error instanceof Error ? error.message : 'Failed to generate PDF',
+        severity: 'error'
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -773,6 +831,10 @@ const RentalApplications: React.FC = () => {
       <Typography variant="h5" gutterBottom>
         Rental Applications
       </Typography>
+      <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
+        <Tab label="All" value="all" />
+        <Tab label="Generated Only" value="generated" />
+      </Tabs>
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -787,171 +849,172 @@ const RentalApplications: React.FC = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {groupedApplications.map((group) => (
-              <React.Fragment key={group.householdId}>
-                <TableRow>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => toggleHousehold(group.householdId)}
-                    >
-                      {expandedHouseholds.has(group.householdId) ? (
-                        <KeyboardArrowUpIcon />
+            {groupedApplications
+              .filter(group => tab === 'all' || group.applications.some(app => app.status === 'generated'))
+              .map((group) => (
+                <React.Fragment key={group.householdId}>
+                  <TableRow>
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        onClick={() => toggleHousehold(group.householdId)}
+                      >
+                        {expandedHouseholds.has(group.householdId) ? (
+                          <KeyboardArrowUpIcon />
+                        ) : (
+                          <KeyboardArrowDownIcon />
+                        )}
+                      </IconButton>
+                    </TableCell>
+                    <TableCell>{group.applications[0].propertyName}</TableCell>
+                    <TableCell>{group.applications[0].applicantName}</TableCell>
+                    <TableCell>{group.applications[0].applicantEmail}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={group.applications[0].status}
+                        color={getStatusColor(group.applications[0].status)}
+                        size="small"
+                      />
+                      {group.applications[0].paymentStatus === 'completed' ? (
+                        <Chip label="Payment Received" color="success" size="small" />
                       ) : (
-                        <KeyboardArrowDownIcon />
+                        <Chip label="Unpaid" color="error" size="small" />
                       )}
-                    </IconButton>
-                  </TableCell>
-                  <TableCell>{group.applications[0].propertyName}</TableCell>
-                  <TableCell>{group.applications[0].applicantName}</TableCell>
-                  <TableCell>{group.applications[0].applicantEmail}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={group.applications[0].status}
-                      color={getStatusColor(group.applications[0].status)}
-                      size="small"
-                    />
-                    {group.applications[0].paymentStatus === 'completed' ? (
-                      <Chip label="Payment Received" color="success" size="small" />
-                    ) : (
-                      <Chip label="Unpaid" color="error" size="small" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {group.applications.length} documents
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleViewDocuments(group.applications[0])}
-                    >
-                      <VisibilityIcon />
-                    </IconButton>
-                    {group.applications.length > 1 && (
-                      <>
+                    </TableCell>
+                    <TableCell>
+                      {group.applications.length} documents
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleViewDocuments(group.applications[0])}
+                      >
+                        <VisibilityIcon />
+                      </IconButton>
+                      {group.applications[0].status === 'generated' && group.applications[0].hasPdfBase64 && group.applications[0].pdfBase64 && (
                         <Button
                           size="small"
                           variant="outlined"
-                          onClick={() => handleStatusChange(group.applications[0]._id, 'approved')}
                           sx={{ ml: 1 }}
+                          onClick={() => handleViewPdf(group.applications[0])}
                         >
-                          Approve All
+                          View PDF
                         </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color="error"
-                          onClick={() => handleStatusChange(group.applications[0]._id, 'rejected')}
-                          sx={{ ml: 1 }}
-                        >
-                          Reject All
-                        </Button>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
-                    <Collapse in={expandedHouseholds.has(group.householdId)} timeout="auto" unmountOnExit>
-                      <Box sx={{ margin: 1 }}>
-                        <Typography variant="h6" gutterBottom component="div">
-                          Application Details
-                        </Typography>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Property</TableCell>
-                              <TableCell>Applicant</TableCell>
-                              <TableCell>Email</TableCell>
-                              <TableCell>Status</TableCell>
-                              <TableCell>Documents</TableCell>
-                              <TableCell>Actions</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {group.applications.map((app) => (
-                              <TableRow key={app._id}>
-                                <TableCell>{app.propertyName}</TableCell>
-                                <TableCell>{app.applicantName}</TableCell>
-                                <TableCell>{app.applicantEmail}</TableCell>
-                                <TableCell>
-                                  <Chip
-                                    label={app.status}
-                                    color={getStatusColor(app.status)}
-                                    size="small"
-                                  />
-                                  {app.paymentStatus === 'completed' ? (
-                                    <Chip label="Payment Received" color="success" size="small" />
-                                  ) : (
-                                    <Chip label="Unpaid" color="error" size="small" />
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  {app.documents.length} documents
-                                </TableCell>
-                                <TableCell>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => handleViewDocuments(app)}
-                                  >
-                                    <VisibilityIcon />
-                                  </IconButton>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={() => handleStatusChange(app._id, 'approved')}
-                                    sx={{ ml: 1 }}
-                                  >
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    color="error"
-                                    onClick={() => handleStatusChange(app._id, 'rejected')}
-                                    sx={{ ml: 1 }}
-                                  >
-                                    Reject
-                                  </Button>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleDeleteApplication(app._id)}
-                                    sx={{ ml: 1 }}
-                                  >
-                                    <DeleteIcon />
-                                  </IconButton>
-                                </TableCell>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
+                      <Collapse in={expandedHouseholds.has(group.householdId)} timeout="auto" unmountOnExit>
+                        <Box sx={{ margin: 1 }}>
+                          <Typography variant="h6" gutterBottom component="div">
+                            Application Details
+                          </Typography>
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Property</TableCell>
+                                <TableCell>Applicant</TableCell>
+                                <TableCell>Email</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Documents</TableCell>
+                                <TableCell>Actions</TableCell>
                               </TableRow>
-                            ))}
-                            {group.principalApplicant && group.principalApplicant.coApplicantEmails && group.principalApplicant.coApplicantEmails.filter(email => !group.applications.some(app => app.applicantEmail === email)).map((email, idx) => {
-                              const principal = group.principalApplicant!; // We know it exists because of the condition above
-                              return (
-                                <TableRow key={email}>
-                                  <TableCell>{principal.propertyName}</TableCell>
-                                  <TableCell>--</TableCell>
-                                  <TableCell>{email}</TableCell>
+                            </TableHead>
+                            <TableBody>
+                              {group.applications.map((app) => (
+                                <TableRow key={app._id}>
+                                  <TableCell>{app.propertyName}</TableCell>
+                                  <TableCell>{app.applicantName}</TableCell>
+                                  <TableCell>{app.applicantEmail}</TableCell>
                                   <TableCell>
-                                    <Chip label="Not Submitted" color="warning" size="small" />
-                                    {principal.paymentStatus === 'completed' ? (
+                                    <Chip
+                                      label={app.status}
+                                      color={getStatusColor(app.status)}
+                                      size="small"
+                                    />
+                                    {app.paymentStatus === 'completed' ? (
                                       <Chip label="Payment Received" color="success" size="small" />
                                     ) : (
                                       <Chip label="Unpaid" color="error" size="small" />
                                     )}
                                   </TableCell>
-                                  <TableCell>0 documents</TableCell>
-                                  <TableCell />
+                                  <TableCell>
+                                    {app.documents.length} documents
+                                  </TableCell>
+                                  <TableCell>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => handleViewDocuments(app)}
+                                    >
+                                      <VisibilityIcon />
+                                    </IconButton>
+                                    {app.status === 'generated' && app.hasPdfBase64 && app.pdfBase64 && (
+                                      <Button
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{ ml: 1 }}
+                                        onClick={() => handleViewPdf(app)}
+                                      >
+                                        View PDF
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      onClick={() => handleStatusChange(app._id, 'approved')}
+                                      sx={{ ml: 1 }}
+                                    >
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      color="error"
+                                      onClick={() => handleStatusChange(app._id, 'rejected')}
+                                      sx={{ ml: 1 }}
+                                    >
+                                      Reject
+                                    </Button>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => handleDeleteApplication(app._id)}
+                                      sx={{ ml: 1 }}
+                                    >
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  </TableCell>
                                 </TableRow>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </Box>
-                    </Collapse>
-                  </TableCell>
-                </TableRow>
-              </React.Fragment>
-            ))}
+                              ))}
+                              {group.principalApplicant && group.principalApplicant.coApplicantEmails && group.principalApplicant.coApplicantEmails.filter(email => !group.applications.some(app => app.applicantEmail === email)).map((email, idx) => {
+                                const principal = group.principalApplicant!; // We know it exists because of the condition above
+                                return (
+                                  <TableRow key={email}>
+                                    <TableCell>{principal.propertyName}</TableCell>
+                                    <TableCell>--</TableCell>
+                                    <TableCell>{email}</TableCell>
+                                    <TableCell>
+                                      <Chip label="Not Submitted" color="warning" size="small" />
+                                      {principal.paymentStatus === 'completed' ? (
+                                        <Chip label="Payment Received" color="success" size="small" />
+                                      ) : (
+                                        <Chip label="Unpaid" color="error" size="small" />
+                                      )}
+                                    </TableCell>
+                                    <TableCell>0 documents</TableCell>
+                                    <TableCell />
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -966,12 +1029,25 @@ const RentalApplications: React.FC = () => {
           Rental Application - {selectedApplication?.applicantName}
         </DialogTitle>
         <DialogContent>
-          {selectedApplication && selectedApplication.hasPdfBase64 && selectedApplication.pdfBase64 && (
-            <iframe
-              src={`data:application/pdf;base64,${selectedApplication.pdfBase64}`}
-              style={{ width: '100%', height: '80vh', border: 'none' }}
-              title="Rental Application PDF"
-            />
+          {selectedApplication && (
+            <Box>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                Debug Info: hasPdfBase64={selectedApplication.hasPdfBase64?.toString()}, 
+                pdfBase64Length={selectedApplication.pdfBase64?.length || 0}
+              </Typography>
+              {selectedApplication.hasPdfBase64 && selectedApplication.pdfBase64 ? (
+                <iframe
+                  src={`data:application/pdf;base64,${selectedApplication.pdfBase64}`}
+                  style={{ width: '100%', height: '80vh', border: 'none' }}
+                  title="Rental Application PDF"
+                />
+              ) : (
+                <Typography variant="body1" color="error">
+                  No PDF data available. hasPdfBase64: {selectedApplication.hasPdfBase64?.toString()}, 
+                  pdfBase64 exists: {!!selectedApplication.pdfBase64}
+                </Typography>
+              )}
+            </Box>
           )}
         </DialogContent>
         <DialogActions>

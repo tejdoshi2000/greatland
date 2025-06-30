@@ -264,36 +264,57 @@ export const RentalApplication: React.FC<RentalApplicationProps> = ({
       // Save the PDF
       const modifiedPdfBytes = await pdfDoc.save();
       
-      // Convert PDF to base64 for storage
+      // Convert PDF to base64 for storage - simple approach
+      const uint8Array = new Uint8Array(modifiedPdfBytes);
       const pdfBase64 = btoa(
-        new Uint8Array(modifiedPdfBytes)
-          .reduce((data, byte) => data + String.fromCharCode(byte), '')
+        Array.from(uint8Array, byte => String.fromCharCode(byte)).join('')
       );
 
+      console.log('PDF generated, size:', modifiedPdfBytes.length, 'bytes');
+      console.log('Base64 length:', pdfBase64.length);
+      console.log('Base64 starts with:', pdfBase64.substring(0, 50));
+      
       console.log('Sending application to backend...');
       // Save the application to the backend
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      console.log('API URL:', apiUrl);
+      
+      const requestBody = {
+        propertyId,
+        propertyName,
+        propertyAddress,
+        applicantName: formData.applicantOneName,
+        applicantEmail: formData.applicantOneEmail,
+        applicantPhone: formData.applicantOnePhone,
+        formData,
+        pdfBase64
+      };
+      
+      console.log('Request body keys:', Object.keys(requestBody));
+      console.log('Request body (without pdfBase64):', {
+        ...requestBody,
+        pdfBase64: requestBody.pdfBase64 ? `[BASE64 STRING - ${requestBody.pdfBase64.length} chars]` : 'null'
+      });
+      
       const response = await fetch(`${apiUrl}/api/rental-applications`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          propertyId,
-          propertyName,
-          propertyAddress,
-          applicantName: formData.applicantOneName,
-          applicantEmail: formData.applicantOneEmail,
-          applicantPhone: formData.applicantOnePhone,
-          formData,
-          pdfBase64
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Backend error response:', errorData);
         throw new Error(errorData.details || errorData.error || 'Failed to save application');
       }
+
+      const responseData = await response.json();
+      console.log('Backend success response:', responseData);
 
       // Create a blob and download link
       const blob = new Blob([modifiedPdfBytes], { type: 'application/pdf' });

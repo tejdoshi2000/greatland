@@ -303,6 +303,7 @@ export default function ApplicationSubmission() {
 
   const checkExistingApplication = async (email: string) => {
     try {
+      // First check by email
       const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/email/${email}`);
       if (response.ok) {
         const data = await response.json();
@@ -325,6 +326,33 @@ export default function ApplicationSubmission() {
           return true;
         }
       }
+
+      // If no application found by email, check by property ID and email combination
+      if (selectedProperty) {
+        const propertyResponse = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/find/${selectedProperty}/${email}`);
+        if (propertyResponse.ok) {
+          const propertyData = await propertyResponse.json();
+          if (propertyData) {
+            setExistingApplication(propertyData);
+            setApplicationId(propertyData._id);
+            setSelectedProperty(propertyData.propertyId);
+            setIsPrincipalApplicant(propertyData.isPrincipalApplicant);
+            setNumberOfAdults(propertyData.numberOfAdults);
+            setCoApplicantEmails(propertyData.coApplicantEmails || []);
+            // Convert document URLs to Document objects
+            const docs = propertyData.documents?.map((doc: any) => ({
+              type: doc.type,
+              file: new File([], doc.url.split('/').pop() || ''),
+              preview: (process.env.REACT_APP_API_URL || 'http://localhost:5000') + (doc.url || ''),
+              documentId: doc.documentId || doc._id,
+              description: doc.description
+            })) || [];
+            setDocuments(docs);
+            return true;
+          }
+        }
+      }
+
       return false;
     } catch (err) {
       console.error('Error checking existing application:', err);
@@ -372,8 +400,6 @@ export default function ApplicationSubmission() {
           isPrincipalApplicant: isPrincipalApplicant,
           numberOfAdults: numberOfAdults || 1,
           coApplicantEmails: isPrincipalApplicant ? coApplicantEmails : [],
-          hasPdfBase64: false,
-          pdfBase64: '',
           status: 'generated',
           documents: [],
           documentsSubmitted: false,

@@ -70,6 +70,14 @@ router.get('/email/:email', async (req, res) => {
 
 // Create new rental application
 router.post('/', async (req, res) => {
+  console.log('=== RENTAL APPLICATION POST REQUEST RECEIVED ===');
+  console.log('Request headers:', req.headers);
+  console.log('Request body keys:', Object.keys(req.body));
+  console.log('Request body (without pdfBase64):', {
+    ...req.body,
+    pdfBase64: req.body.pdfBase64 ? `[BASE64 STRING - ${req.body.pdfBase64.length} chars]` : 'null'
+  });
+  
   try {
     const {
       propertyId,
@@ -86,6 +94,19 @@ router.post('/', async (req, res) => {
       user
     } = req.body;
 
+    // Ultra-verbose debug logging
+    console.log('Creating rental application with data:', {
+      propertyId,
+      propertyName,
+      applicantName,
+      applicantEmail,
+      hasPdfBase64: req.body.hasPdfBase64,
+      pdfBase64Type: typeof req.body.pdfBase64,
+      pdfBase64Length: req.body.pdfBase64 ? req.body.pdfBase64.length : 0,
+      pdfBase64Exists: !!req.body.pdfBase64,
+      pdfBase64StartsWith: req.body.pdfBase64 ? req.body.pdfBase64.substring(0, 20) : 'none'
+    });
+
     // Validate required fields
     if (!propertyId || !propertyName || !applicantName || !applicantEmail) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -96,6 +117,15 @@ router.post('/', async (req, res) => {
     if (!property) {
       return res.status(404).json({ message: 'Property not found' });
     }
+
+    // Determine if PDF exists (must be a string and at least 20 chars)
+    const hasPdf = pdfBase64 && typeof pdfBase64 === 'string' && pdfBase64.length > 20;
+    console.log('PDF detection:', {
+      hasPdf,
+      pdfBase64Type: typeof pdfBase64,
+      pdfBase64Length: pdfBase64 ? pdfBase64.length : 0,
+      pdfBase64Valid: hasPdf
+    });
 
     // Create new application
     const application = new RentalApplication({
@@ -108,10 +138,17 @@ router.post('/', async (req, res) => {
       isPrincipalApplicant,
       numberOfAdults: numberOfAdults || 1,
       coApplicantEmails,
-      hasPdfBase64,
-      pdfBase64,
+      hasPdfBase64: hasPdf,
+      pdfBase64: hasPdf ? pdfBase64 : '',
       status: 'generated',
       user: user || '000000000000000000000000' // Use provided user ID or default
+    });
+
+    console.log('Application to be saved:', {
+      hasPdfBase64: application.hasPdfBase64,
+      pdfBase64Type: typeof application.pdfBase64,
+      pdfBase64Length: application.pdfBase64 ? application.pdfBase64.length : 0,
+      pdfBase64StartsWith: application.pdfBase64 ? application.pdfBase64.substring(0, 20) : 'none'
     });
 
     // If this is a principal applicant, update any existing additional applicants to have the same householdId
@@ -515,7 +552,7 @@ router.post('/:id/submit-documents', auth, async (req, res) => {
 });
 
 // Find application by property and email
-router.get('/find/:propertyId/:email', auth, async (req, res) => {
+router.get('/find/:propertyId/:email', async (req, res) => {
   try {
     const { propertyId, email } = req.params;
     const application = await RentalApplication.findOne({
@@ -844,6 +881,63 @@ router.get('/:id/fee', async (req, res) => {
   } catch (error) {
     console.error('Error calculating application fee:', error);
     res.status(500).json({ message: 'Error calculating application fee' });
+  }
+});
+
+// Fix existing applications that have PDFs but hasPdfBase64 is false (admin only)
+router.post('/fix-pdf-flags', auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    console.log('Fixing PDF flags for existing applications...');
+
+    // Find all applications that have pdfBase64 but hasPdfBase64 is false
+    const applicationsToFix = await RentalApplication.find({
+      pdfBase64: { $exists: true, $ne: '' },
+      hasPdfBase64: false
+    });
+
+    console.log(`Found ${applicationsToFix.length} applications to fix`);
+
+    let fixedCount = 0;
+    for (const application of applicationsToFix) {
+      application.hasPdfBase64 = true;
+      await application.save();
+      fixedCount++;
+      console.log(`Fixed application ${application._id} for ${application.applicantName}`);
+    }
+
+    res.json({
+      success: true,
+      message: `Fixed ${fixedCount} applications`,
+      fixedCount,
+      totalFound: applicationsToFix.length
+    });
+
+  } catch (error) {
+    console.error('Error fixing PDF flags:', error);
+    res.status(500).json({ 
+      error: 'Failed to fix PDF flags',
+      details: error.message 
+    });
+  }
+});
+
+// One-time admin endpoint to fix all PDF flags
+router.post('/fix-all-pdf-flags', auth, async (req, res) => {
+  try {
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    const result = await RentalApplication.updateMany(
+      { pdfBase64: { $exists: true, $type: 'string', $ne: '' } },
+      [{ $set: { hasPdfBase64: { $cond: [{ $gt: [{ $strLenCP: '$pdfBase64' }, 20] }, true, false] } } }]
+    );
+    res.json({ fixed: result.modifiedCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
