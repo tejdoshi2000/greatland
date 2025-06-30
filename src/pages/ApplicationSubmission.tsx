@@ -248,22 +248,26 @@ const IncomeDocumentUpload: React.FC<IncomeDocumentUploadProps> = ({ onUpload })
 export default function ApplicationSubmission() {
   const [activeStep, setActiveStep] = useState(0);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [selectedProperty, setSelectedProperty] = useState('');
-  const [email, setEmail] = useState('');
-  const [isPrincipalApplicant, setIsPrincipalApplicant] = useState(true);
-  const [numberOfAdults, setNumberOfAdults] = useState(1);
+  const [selectedProperty, setSelectedProperty] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [isPrincipalApplicant, setIsPrincipalApplicant] = useState<boolean>(true);
+  const [numberOfAdults, setNumberOfAdults] = useState<number>(1);
   const [coApplicantEmails, setCoApplicantEmails] = useState<string[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [applicationId, setApplicationId] = useState<string | null>(null);
   const [existingApplication, setExistingApplication] = useState<any>(null);
-  const [paymentInfo, setPaymentInfo] = useState<{ totalDue: number, message: string, breakdown?: any } | null>(null);
+  const [applicationId, setApplicationId] = useState<string>('');
+  const [paymentInfo, setPaymentInfo] = useState<any>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // New state for dynamic workflow
+  const [needsApplicationGeneration, setNeedsApplicationGeneration] = useState<boolean>(false);
+  const [dynamicSteps, setDynamicSteps] = useState<string[]>(steps);
 
   // File input refs
   const rentalFileRef = React.useRef<HTMLInputElement>(null);
@@ -323,7 +327,13 @@ export default function ApplicationSubmission() {
             description: doc.description
           })) || [];
           setDocuments(docs);
-          return true;
+          
+          // Return object with existence and PDF status
+          return {
+            exists: true,
+            hasPdf: data.hasPdfBase64 && data.pdfBase64,
+            application: data
+          };
         }
       }
 
@@ -348,15 +358,21 @@ export default function ApplicationSubmission() {
               description: doc.description
             })) || [];
             setDocuments(docs);
-            return true;
+            
+            // Return object with existence and PDF status
+            return {
+              exists: true,
+              hasPdf: propertyData.hasPdfBase64 && propertyData.pdfBase64,
+              application: propertyData
+            };
           }
         }
       }
 
-      return false;
+      return { exists: false, hasPdf: false, application: null };
     } catch (err) {
       console.error('Error checking existing application:', err);
-      return false;
+      return { exists: false, hasPdf: false, application: null };
     }
   };
 
@@ -382,9 +398,10 @@ export default function ApplicationSubmission() {
       }
 
       // Check for existing application
-      const exists = await checkExistingApplication(email);
-      if (!exists) {
-        // Always create a new application for this email/property if one does not exist
+      const applicationCheck = await checkExistingApplication(email);
+      
+      if (!applicationCheck.exists) {
+        // No application exists - create one and set up for generation
         const property = properties.find(p => p._id === selectedProperty);
         if (!property) {
           setError('Selected property not found');
@@ -423,68 +440,151 @@ export default function ApplicationSubmission() {
           const data = await response.json();
           setExistingApplication(data);
           setApplicationId(data._id);
+          
+          // Set up for application generation step
+          setNeedsApplicationGeneration(true);
+          setDynamicSteps(['Select Property', 'Applicant Information', 'Generate Application', 'Upload Documents', 'Application Fee & Payment']);
         } catch (err) {
           setError('Failed to create application. Please try again.');
           return;
         }
       } else {
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
-      }
-    } else if (activeStep === 2) {
-      // On the documents step, check if all required documents are uploaded
-      const requiredTypes: DocumentType[] = ['rental', 'id', 'ssn'];
-      const uploadedTypes = documents.map(doc => doc.type);
-      const missingTypes = requiredTypes.filter(type => !uploadedTypes.includes(type));
-      
-      if (missingTypes.length > 0) {
-        setError(`Please upload all required documents: ${missingTypes.join(', ')}`);
-        return;
-      }
-
-      // Income documents are optional (applicant might be unemployed)
-      // No validation needed for income documents
-
-      // Update application status to pending_payment
-      if (applicationId) {
-        try {
-          const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/status`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-              status: 'pending_payment',
-              documentsSubmitted: true 
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to update application status');
-          }
-        } catch (err) {
-          console.error('Error updating application status:', err);
-          setError('Failed to submit application. Please try again.');
-          return;
+        // Application exists - check if it has a PDF
+        if (!applicationCheck.hasPdf) {
+          // Application exists but no PDF - need to generate
+          setNeedsApplicationGeneration(true);
+          setDynamicSteps(['Select Property', 'Applicant Information', 'Generate Application', 'Upload Documents', 'Application Fee & Payment']);
+        } else {
+          // Application exists and has PDF - proceed normally
+          setNeedsApplicationGeneration(false);
+          setDynamicSteps(steps);
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
         }
       }
-
-      // Fetch payment info before advancing to payment step
-      if (applicationId) {
-        setPaymentLoading(true);
-        setPaymentError(null);
-        try {
-          const feeRes = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/fee`);
-          if (!feeRes.ok) {
-            throw new Error('Failed to fetch payment info');
-          }
-          const feeData = await feeRes.json();
-          setPaymentInfo(feeData);
-        } catch (err) {
-          setPaymentError('Failed to fetch payment info. Please try again.');
+    } else if (activeStep === 2) {
+      // This could be either "Generate Application" or "Upload Documents" depending on the dynamic steps
+      const currentStepName = dynamicSteps[activeStep];
+      
+      if (currentStepName === 'Generate Application') {
+        // This is the application generation step - just proceed to next step
+        // The actual generation will happen in the step content
+      } else if (currentStepName === 'Upload Documents') {
+        // On the documents step, check if all required documents are uploaded
+        const requiredTypes: DocumentType[] = ['rental', 'id', 'ssn'];
+        const uploadedTypes = documents.map(doc => doc.type);
+        const missingTypes = requiredTypes.filter(type => !uploadedTypes.includes(type));
+        
+        if (missingTypes.length > 0) {
+          setError(`Please upload all required documents: ${missingTypes.join(', ')}`);
           return;
-        } finally {
-          setPaymentLoading(false);
+        }
+
+        // Income documents are optional (applicant might be unemployed)
+        // No validation needed for income documents
+
+        // Update application status to pending_payment
+        if (applicationId) {
+          try {
+            const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/status`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ 
+                status: 'pending_payment',
+                documentsSubmitted: true 
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to update application status');
+            }
+          } catch (err) {
+            console.error('Error updating application status:', err);
+            setError('Failed to submit application. Please try again.');
+            return;
+          }
+        }
+
+        // Fetch payment info before advancing to payment step
+        if (applicationId) {
+          setPaymentLoading(true);
+          setPaymentError(null);
+          try {
+            const feeRes = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/fee`);
+            if (!feeRes.ok) {
+              throw new Error('Failed to fetch payment info');
+            }
+            const feeData = await feeRes.json();
+            setPaymentInfo(feeData);
+          } catch (err) {
+            setPaymentError('Failed to fetch payment info. Please try again.');
+            return;
+          } finally {
+            setPaymentLoading(false);
+          }
+        }
+      }
+    } else if (activeStep === 3) {
+      // This could be either "Upload Documents" or "Application Fee & Payment" depending on the dynamic steps
+      const currentStepName = dynamicSteps[activeStep];
+      
+      if (currentStepName === 'Upload Documents') {
+        // On the documents step, check if all required documents are uploaded
+        const requiredTypes: DocumentType[] = ['rental', 'id', 'ssn'];
+        const uploadedTypes = documents.map(doc => doc.type);
+        const missingTypes = requiredTypes.filter(type => !uploadedTypes.includes(type));
+        
+        if (missingTypes.length > 0) {
+          setError(`Please upload all required documents: ${missingTypes.join(', ')}`);
+          return;
+        }
+
+        // Income documents are optional (applicant might be unemployed)
+        // No validation needed for income documents
+
+        // Update application status to pending_payment
+        if (applicationId) {
+          try {
+            const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/status`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ 
+                status: 'pending_payment',
+                documentsSubmitted: true 
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to update application status');
+            }
+          } catch (err) {
+            console.error('Error updating application status:', err);
+            setError('Failed to submit application. Please try again.');
+            return;
+          }
+        }
+
+        // Fetch payment info before advancing to payment step
+        if (applicationId) {
+          setPaymentLoading(true);
+          setPaymentError(null);
+          try {
+            const feeRes = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/fee`);
+            if (!feeRes.ok) {
+              throw new Error('Failed to fetch payment info');
+            }
+            const feeData = await feeRes.json();
+            setPaymentInfo(feeData);
+          } catch (err) {
+            setPaymentError('Failed to fetch payment info. Please try again.');
+            return;
+          } finally {
+            setPaymentLoading(false);
+          }
         }
       }
     }
@@ -699,9 +799,69 @@ export default function ApplicationSubmission() {
     }
   }, [applicationId, paymentInfo]);
 
+  // Function to check if application now has PDF after generation
+  const checkApplicationPdfStatus = async () => {
+    if (!applicationId) return false;
+    
+    try {
+      const response = await fetch((process.env.REACT_APP_API_URL || 'http://localhost:5000') + `/api/rental-applications/${applicationId}/pdf-status`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.hasPdf;
+      }
+    } catch (err) {
+      console.error('Error checking application PDF status:', err);
+    }
+    return false;
+  };
+
+  // Function to handle returning from application generation
+  const handleReturnFromGeneration = async () => {
+    const hasPdf = await checkApplicationPdfStatus();
+    if (hasPdf) {
+      // Application now has PDF, update workflow to normal flow
+      setNeedsApplicationGeneration(false);
+      setDynamicSteps(steps);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    }
+  };
+
+  // Check PDF status when component mounts or when returning from generation
+  useEffect(() => {
+    if (applicationId && needsApplicationGeneration) {
+      handleReturnFromGeneration();
+    }
+  }, [applicationId]);
+
+  // Check PDF status when on Generate Application step
+  useEffect(() => {
+    if (activeStep === 2 && dynamicSteps[activeStep] === 'Generate Application' && applicationId) {
+      const checkPdf = async () => {
+        const hasPdf = await checkApplicationPdfStatus();
+        if (hasPdf) {
+          // Application now has PDF, update workflow to normal flow
+          setNeedsApplicationGeneration(false);
+          setDynamicSteps(steps);
+          setActiveStep(2); // Move to Upload Documents step
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        }
+      };
+      checkPdf();
+      
+      // Set up periodic check every 5 seconds
+      const interval = setInterval(checkPdf, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [activeStep, dynamicSteps, applicationId]);
+
   const getStepContent = (step: number) => {
-    switch (step) {
-      case 0:
+    const currentStepName = dynamicSteps[step];
+    
+    switch (currentStepName) {
+      case 'Select Property':
         return (
           <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <TextField
@@ -743,7 +903,7 @@ export default function ApplicationSubmission() {
             </TextField>
           </Box>
         );
-      case 1:
+      case 'Applicant Information':
         return (
           <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <TextField
@@ -817,7 +977,81 @@ export default function ApplicationSubmission() {
             )}
           </Box>
         );
-      case 2:
+      case 'Generate Application':
+        return (
+          <Box sx={{ mt: { xs: 1, sm: 2 } }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ 
+                fontSize: { xs: '1.125rem', sm: '1.25rem' },
+                fontWeight: 600
+              }}
+            >
+              Generate Rental Application
+            </Typography>
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              sx={{ 
+                mb: 3,
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }}
+            >
+              You need to generate a rental application before proceeding. Click the button below to create and download your application form.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => {
+                // Navigate to the rental application generation page
+                window.location.href = `/rental-application/${selectedProperty}`;
+              }}
+              fullWidth
+              sx={{ 
+                mb: 2,
+                minHeight: { xs: '56px', sm: '48px' },
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }}
+              size={isMobile ? "large" : "large"}
+            >
+              Generate Application Form
+            </Button>
+            <Typography 
+              variant="body2" 
+              color="text.secondary" 
+              sx={{ 
+                mb: 2,
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }}
+            >
+              After generating the application, please print it, sign it, and then return to this page to continue with document upload.
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={async () => {
+                const hasPdf = await checkApplicationPdfStatus();
+                if (hasPdf) {
+                  setNeedsApplicationGeneration(false);
+                  setDynamicSteps(steps);
+                  setActiveStep(2); // Move to Upload Documents step
+                  setSuccess(true);
+                  setTimeout(() => setSuccess(false), 3000);
+                } else {
+                  setError('Application has not been generated yet. Please generate the application first.');
+                }
+              }}
+              fullWidth
+              sx={{ 
+                minHeight: { xs: '48px', sm: '40px' },
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }}
+              size={isMobile ? "large" : "medium"}
+            >
+              I've Generated My Application - Continue
+            </Button>
+          </Box>
+        );
+      case 'Upload Documents':
         return (
           <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             <Grid container spacing={{ xs: 1, sm: 2 }}>
@@ -976,7 +1210,7 @@ export default function ApplicationSubmission() {
             )}
           </Box>
         );
-      case 3:
+      case 'Application Fee & Payment':
         return (
           <Box sx={{ mt: { xs: 1, sm: 2 } }}>
             {paymentLoading ? (
@@ -1081,7 +1315,7 @@ export default function ApplicationSubmission() {
           }}
           orientation={isMobile ? "vertical" : "horizontal"}
         >
-          {steps.map((label) => (
+          {dynamicSteps.map((label) => (
             <Step key={label}>
               <StepLabel>{label}</StepLabel>
             </Step>
@@ -1125,14 +1359,14 @@ export default function ApplicationSubmission() {
           <Button
             variant="contained"
             onClick={handleNext}
-            disabled={activeStep === steps.length - 1 || loading}
+            disabled={activeStep === dynamicSteps.length - 1 || loading}
             fullWidth={isMobile}
             sx={{
               minHeight: { xs: '48px', sm: '40px' },
               order: { xs: 1, sm: 2 }
             }}
           >
-            {activeStep === steps.length - 1 ? 'Submit' : 'Next'}
+            {activeStep === dynamicSteps.length - 1 ? 'Submit' : 'Next'}
           </Button>
         </Box>
       </Paper>
